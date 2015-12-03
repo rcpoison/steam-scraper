@@ -1,6 +1,8 @@
 # steam-scraper
 Scrapes game data from the Steam shop API and adds categories from the shop categories and genres.
 
+![Categories](/steamCategories.jpg?raw=true "Categories")
+
 Shop API is rate limited and suffers from non-deterministic failures, run the script multiple times to gather more data.
 
 ## Usage
