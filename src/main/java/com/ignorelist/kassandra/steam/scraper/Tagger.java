@@ -29,6 +29,14 @@ import java.util.Set;
 import org.antlr.runtime.ANTLRInputStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.jxpath.JXPathContext;
 
@@ -47,16 +55,29 @@ public class Tagger {
 	/**
 	 * @param args the command line arguments
 	 */
-	public static void main(String[] args) throws IOException, RecognitionException {
+	public static void main(String[] args) throws IOException, RecognitionException, ParseException {
+		Options options=new Options();
+		//options.addOption("w", false, "write file (potentially dangerous)");
+		options.addOption(Option.builder("f").hasArg().argName("file").desc("required if using multiple accounts: absolute path to desired sharedconfig.vdf").build());
+		options.addOption("h", "help", false, "show this help");
+
+		CommandLineParser parser=new DefaultParser();
+		CommandLine commandLine=parser.parse(options, args);
+		if (commandLine.hasOption("h")) {
+			HelpFormatter formatter=new HelpFormatter();
+			formatter.printHelp("java -jar steam-scraper-*.one-jar.jar", options);
+			System.exit(0);
+		}
+
 		Tagger tagger=new Tagger(new Scraper());
 		final Path path;
-		if (1==args.length) {
-			path=Paths.get(args[0]);
-			System.err.println("overriding path: "+path.toString());
+		if (commandLine.hasOption("f")) {
+			path=Paths.get(commandLine.getOptionValue("f"));
 		} else {
 			PathResolver pathResolver=new PathResolver();
 			path=pathResolver.findSharedConfig();
 		}
+		
 		tagger.tag(path);
 	}
 
