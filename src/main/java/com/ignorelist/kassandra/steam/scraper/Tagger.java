@@ -61,9 +61,11 @@ public class Tagger {
 	 */
 	public static void main(String[] args) throws IOException, RecognitionException, ParseException {
 		Options options=new Options();
-		options.addOption("w", false, "overwrite file (potentially dangerous)");
+		options.addOption("w", false, "directly overwrite file (potentially dangerous)");
 		options.addOption(Option.builder("f").hasArg().argName("file").desc("required if using multiple accounts: absolute path to desired sharedconfig.vdf").build());
 		options.addOption("h", "help", false, "show this help");
+		options.addOption("nc", false, "don't add categories");
+		options.addOption("ng", false, "don't add genres");
 
 		CommandLineParser parser=new DefaultParser();
 		CommandLine commandLine=parser.parse(options, args);
@@ -82,7 +84,7 @@ public class Tagger {
 			path=pathResolver.findSharedConfig();
 		}
 
-		VdfNode tagged=tagger.tag(path);
+		VdfNode tagged=tagger.tag(path, !commandLine.hasOption("nc"), !commandLine.hasOption("ng"));
 		if (commandLine.hasOption("w")) {
 			Path backup=path.getParent().resolve(path.getFileName().toString()+".bak"+new Date().getTime());
 			Files.copy(path, backup, StandardCopyOption.REPLACE_EXISTING);
@@ -93,7 +95,7 @@ public class Tagger {
 		}
 	}
 
-	public VdfNode tag(Path path) throws IOException, RecognitionException {
+	public VdfNode tag(Path path, boolean addCategories, boolean addGenres) throws IOException, RecognitionException {
 		InputStream inputStream=Files.newInputStream(path, StandardOpenOption.READ);
 		VdfRoot vdfRoot=doSloppyParse(inputStream);
 		IOUtils.closeQuietly(inputStream);
