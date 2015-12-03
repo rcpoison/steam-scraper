@@ -17,12 +17,16 @@ import com.technofovea.hl2parse.vdf.ValveTokenLexer;
 import com.technofovea.hl2parse.vdf.VdfAttribute;
 import com.technofovea.hl2parse.vdf.VdfNode;
 import com.technofovea.hl2parse.vdf.VdfRoot;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -57,7 +61,7 @@ public class Tagger {
 	 */
 	public static void main(String[] args) throws IOException, RecognitionException, ParseException {
 		Options options=new Options();
-		//options.addOption("w", false, "write file (potentially dangerous)");
+		options.addOption("w", false, "overwrite file (potentially dangerous)");
 		options.addOption(Option.builder("f").hasArg().argName("file").desc("required if using multiple accounts: absolute path to desired sharedconfig.vdf").build());
 		options.addOption("h", "help", false, "show this help");
 
@@ -77,11 +81,19 @@ public class Tagger {
 			PathResolver pathResolver=new PathResolver();
 			path=pathResolver.findSharedConfig();
 		}
-		
-		tagger.tag(path);
+
+		VdfNode tagged=tagger.tag(path);
+		if (commandLine.hasOption("w")) {
+			Path backup=path.getParent().resolve(path.getFileName().toString()+".bak"+new Date().getTime());
+			Files.copy(path, backup, StandardCopyOption.REPLACE_EXISTING);
+			Files.copy(new ByteArrayInputStream(tagged.toPrettyString().getBytes(StandardCharsets.UTF_8)), path, StandardCopyOption.REPLACE_EXISTING);
+		} else {
+			System.err.println(tagged.toPrettyString());
+			System.err.println("pipe to file and copy to: "+path.toString());
+		}
 	}
 
-	public void tag(Path path) throws IOException, RecognitionException {
+	public VdfNode tag(Path path) throws IOException, RecognitionException {
 		InputStream inputStream=Files.newInputStream(path, StandardOpenOption.READ);
 		VdfRoot vdfRoot=doSloppyParse(inputStream);
 		IOUtils.closeQuietly(inputStream);
@@ -117,8 +129,7 @@ public class Tagger {
 				System.err.println(e);
 			}
 		}
-		System.out.println(vdfRoot.toPrettyString());
-		System.err.println("pipe to file and copy to: "+path.toString());
+		return vdfRoot;
 	}
 
 	private static void addTags(VdfNode gameNode, Data gameData) {
