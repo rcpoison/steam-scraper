@@ -93,9 +93,9 @@ public class Tagger {
 		} else {
 			removeTags=Collections.<String>emptySet();
 		}
-		
+
 		VdfNode tagged=tagger.tag(path, !commandLine.hasOption("c"), !commandLine.hasOption("g"), removeTags);
-		
+
 		if (commandLine.hasOption("w")) {
 			Path backup=path.getParent().resolve(path.getFileName().toString()+".bak"+new Date().getTime());
 			Files.copy(path, backup, StandardCopyOption.REPLACE_EXISTING);
@@ -121,7 +121,7 @@ public class Tagger {
 				final long gameId=Long.parseLong(gameNode.getName());
 				existingGameIds.add(gameId);
 				Data gameData=scraper.load(gameId);
-				addTags(gameNode, gameData, removeTags);
+				addTags(gameNode, gameData, addCategories, addGenres, removeTags);
 			} catch (Exception e) {
 				System.err.println(e);
 			}
@@ -136,7 +136,7 @@ public class Tagger {
 				VdfNode gameNode=new VdfNode();
 				gameNode.setName(gameId.toString());
 				Data gameData=scraper.load(gameId);
-				addTags(gameNode, gameData, removeTags);
+				addTags(gameNode, gameData, addCategories, addGenres, removeTags);
 				appsNode.addChild(gameNode);
 			} catch (Exception e) {
 				System.err.println(e);
@@ -145,7 +145,7 @@ public class Tagger {
 		return vdfRoot;
 	}
 
-	private static void addTags(VdfNode gameNode, Data gameData, Set<String> removeTags) {
+	private static void addTags(VdfNode gameNode, Data gameData, boolean addCategories, boolean addGenres, Set<String> removeTags) {
 		VdfNode tagNode=Iterables.find(gameNode.getChildren(), new Predicate<VdfNode>() {
 			@Override
 			public boolean apply(VdfNode input) {
@@ -163,21 +163,25 @@ public class Tagger {
 				return input.getValue();
 			}
 		}));
-		Iterables.addAll(existingTags, Iterables.transform(gameData.getCategories(), new Function<Category, String>() {
-			@Override
-			public String apply(Category input) {
-				return input.getDescription();
-			}
-		}));
-		Iterables.addAll(existingTags, Iterables.transform(gameData.getGenres(), new Function<Genre, String>() {
-			@Override
-			public String apply(Genre input) {
-				return input.getDescription();
-			}
-		}));
+		if (addCategories) {
+			Iterables.addAll(existingTags, Iterables.transform(gameData.getCategories(), new Function<Category, String>() {
+				@Override
+				public String apply(Category input) {
+					return input.getDescription();
+				}
+			}));
+		}
+		if (addGenres) {
+			Iterables.addAll(existingTags, Iterables.transform(gameData.getGenres(), new Function<Genre, String>() {
+				@Override
+				public String apply(Genre input) {
+					return input.getDescription();
+				}
+			}));
+		}
 
 		existingTags.removeAll(removeTags);
-		
+
 		List<VdfAttribute> attributes=tagNode.getAttributes();
 		attributes.clear();
 		for (String tag : existingTags) {
