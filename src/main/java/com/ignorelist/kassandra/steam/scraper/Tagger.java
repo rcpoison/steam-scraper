@@ -6,6 +6,7 @@
 package com.ignorelist.kassandra.steam.scraper;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -26,6 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -36,6 +38,7 @@ import org.antlr.runtime.RecognitionException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -64,11 +67,13 @@ public class Tagger {
 		options.addOption("w", false, "directly overwrite sharedconfig.vdf (potentially dangerous)");
 		options.addOption(Option.builder("f").hasArg().argName("file").desc("required if using multiple accounts: absolute path to desired sharedconfig.vdf").build());
 		options.addOption("h", "help", false, "show this help");
-		options.addOption("nc", false, "don't add categories");
-		options.addOption("ng", false, "don't add genres");
+		options.addOption("c", false, "don't add categories");
+		options.addOption("g", false, "don't add genres");
+		options.addOption(Option.builder("r").longOpt("remove").hasArgs().argName("category").desc("remove categories").build());
 
 		CommandLineParser parser=new DefaultParser();
 		CommandLine commandLine=parser.parse(options, args);
+
 		if (commandLine.hasOption("h")) {
 			HelpFormatter formatter=new HelpFormatter();
 			formatter.printHelp("java -jar steam-scraper-*.one-jar.jar", options);
@@ -84,7 +89,16 @@ public class Tagger {
 			path=pathResolver.findSharedConfig();
 		}
 
-		VdfNode tagged=tagger.tag(path, !commandLine.hasOption("nc"), !commandLine.hasOption("ng"));
+		final String[] removeTagsValues=commandLine.getOptionValues("remove");
+		final Set<String> removeTags;
+		if (null!=removeTagsValues) {
+			removeTags=Sets.newHashSet(removeTagsValues);
+		} else {
+			removeTags=Collections.<String>emptySet();
+		}
+		
+		VdfNode tagged=tagger.tag(path, !commandLine.hasOption("c"), !commandLine.hasOption("g"), removeTags);
+		
 		if (commandLine.hasOption("w")) {
 			Path backup=path.getParent().resolve(path.getFileName().toString()+".bak"+new Date().getTime());
 			Files.copy(path, backup, StandardCopyOption.REPLACE_EXISTING);
@@ -95,7 +109,7 @@ public class Tagger {
 		}
 	}
 
-	public VdfNode tag(Path path, boolean addCategories, boolean addGenres) throws IOException, RecognitionException {
+	public VdfNode tag(Path path, boolean addCategories, boolean addGenres, Set<String> removeTags) throws IOException, RecognitionException {
 		InputStream inputStream=Files.newInputStream(path, StandardOpenOption.READ);
 		VdfRoot vdfRoot=doSloppyParse(inputStream);
 		IOUtils.closeQuietly(inputStream);
@@ -110,7 +124,7 @@ public class Tagger {
 				final long gameId=Long.parseLong(gameNode.getName());
 				existingGameIds.add(gameId);
 				Data gameData=scraper.load(gameId);
-				addTags(gameNode, gameData);
+				addTags(gameNode, gameData, removeTags);
 			} catch (Exception e) {
 				System.err.println(e);
 			}
@@ -125,7 +139,7 @@ public class Tagger {
 				VdfNode gameNode=new VdfNode();
 				gameNode.setName(gameId.toString());
 				Data gameData=scraper.load(gameId);
-				addTags(gameNode, gameData);
+				addTags(gameNode, gameData, removeTags);
 				appsNode.addChild(gameNode);
 			} catch (Exception e) {
 				System.err.println(e);
@@ -134,7 +148,7 @@ public class Tagger {
 		return vdfRoot;
 	}
 
-	private static void addTags(VdfNode gameNode, Data gameData) {
+	private static void addTags(VdfNode gameNode, Data gameData, Set<String> removeTags) {
 		VdfNode tagNode=Iterables.find(gameNode.getChildren(), new Predicate<VdfNode>() {
 			@Override
 			public boolean apply(VdfNode input) {
@@ -165,6 +179,8 @@ public class Tagger {
 			}
 		}));
 
+		existingTags.removeAll(removeTags);
+		
 		List<VdfAttribute> attributes=tagNode.getAttributes();
 		attributes.clear();
 		for (String tag : existingTags) {
