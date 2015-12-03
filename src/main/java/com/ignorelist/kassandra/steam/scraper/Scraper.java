@@ -39,8 +39,6 @@ public class Scraper {
 	 */
 	public static void main(String[] args) throws MalformedURLException, IOException {
 		final Path path=Paths.get("/home/poison/.steam/steam/steamapps");
-		// /usr/local/games/_wine/steam/drive_c/Program Files/Steam/steamapps
-		//final Set<Long> gameIds=LibraryScanner.findGames(Paths.get("/home/poison/.steam/root/SteamApps"));
 		final Set<Long> gameIds=LibraryScanner.findGames(path);
 		System.err.println(Joiner.on(',').join(gameIds));
 		Scraper s=new Scraper();

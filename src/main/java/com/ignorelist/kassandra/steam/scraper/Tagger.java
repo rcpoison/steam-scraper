@@ -89,6 +89,7 @@ public class Tagger {
 			}
 		}
 		System.out.println(vdfRoot.toPrettyString());
+		System.err.println("pipe to file and copy to: " + path.toString());
 	}
 
 	private static void addTags(VdfNode gameNode, Data gameData) {
