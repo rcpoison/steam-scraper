@@ -61,7 +61,7 @@ public class Tagger {
 	 */
 	public static void main(String[] args) throws IOException, RecognitionException, ParseException {
 		Options options=new Options();
-		options.addOption("w", false, "directly overwrite file (potentially dangerous)");
+		options.addOption("w", false, "directly overwrite sharedconfig.vdf (potentially dangerous)");
 		options.addOption(Option.builder("f").hasArg().argName("file").desc("required if using multiple accounts: absolute path to desired sharedconfig.vdf").build());
 		options.addOption("h", "help", false, "show this help");
 		options.addOption("nc", false, "don't add categories");
