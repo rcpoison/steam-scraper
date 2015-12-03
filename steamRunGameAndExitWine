@@ -1,0 +1,25 @@
+#!/bin/bash
+# REDWIBDD-H8SUI-FJYY0-8R2RE-3YDCM
+#203160 tomb raider
+#20900 wticher
+export WINEPREFIX=/usr/local/games/_wine/steam
+export XMODIFIERS=''
+cd $WINEPREFIX/'drive_c/Program Files/Steam'
+CHKCMD="pgrep -l -w -f '.*steamapps\\common\\.*\.exe.*'"
+wine Steam.exe steam://rungameid/$1 &
+# give steam some time to login and start the game
+for i in $(seq 1 30); do
+	sleep 1;
+	if [ -n "$($CHKCMD)" ]; then
+		echo "game started after ~$i seconds"
+		break
+	fi
+done
+
+while true; do
+	sleep 1
+	if [ -z "$($CHKCMD)" ]; then
+		wine Steam.exe -shutdown
+		exit
+	fi
+done

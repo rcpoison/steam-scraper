@@ -1,0 +1,141 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.ignorelist.kassandra.steam.scraper;
+
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
+import com.ignorelist.kassandra.steam.scraper.model.Category;
+import com.ignorelist.kassandra.steam.scraper.model.Data;
+import com.ignorelist.kassandra.steam.scraper.model.Genre;
+import com.technofovea.hl2parse.vdf.SloppyParser;
+import com.technofovea.hl2parse.vdf.ValveTokenLexer;
+import com.technofovea.hl2parse.vdf.VdfAttribute;
+import com.technofovea.hl2parse.vdf.VdfNode;
+import com.technofovea.hl2parse.vdf.VdfRoot;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import org.antlr.runtime.ANTLRInputStream;
+import org.antlr.runtime.CommonTokenStream;
+import org.antlr.runtime.RecognitionException;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.jxpath.JXPathContext;
+
+/**
+ *
+ * @author poison
+ */
+public class Tagger {
+
+	private final Scraper scraper;
+
+	public Tagger(Scraper scraper) {
+		this.scraper=scraper;
+	}
+
+	/**
+	 * @param args the command line arguments
+	 */
+	public static void main(String[] args) throws IOException, RecognitionException {
+		Tagger tagger=new Tagger(new Scraper());
+		tagger.tag();
+	}
+	
+	public void tag() throws IOException, RecognitionException {
+		PathResolver pathResolver=new PathResolver();
+		final Path path=pathResolver.findSharedConfig();
+		InputStream inputStream=Files.newInputStream(path, StandardOpenOption.READ);
+		VdfRoot vdfRoot=doSloppyParse(inputStream);
+		IOUtils.closeQuietly(inputStream);
+
+		JXPathContext pathContext=JXPathContext.newContext(vdfRoot);
+		VdfNode appsNode=(VdfNode) pathContext.getValue("//children[name='apps']");
+		System.err.println(appsNode.getChildren().size());
+		Set<Long> existingGameIds=new HashSet<>();
+		for (VdfNode gameNode : appsNode.getChildren()) {
+			//System.err.println(gameNode.getName());
+			try {
+				final long gameId=Long.parseLong(gameNode.getName());
+				existingGameIds.add(gameId);
+				Data gameData=scraper.load(gameId);
+				addTags(gameNode, gameData);
+			} catch (Exception e) {
+				System.err.println(e);
+			}
+
+		}
+		// vdf doesn't contain all games, add the rest (at least the installed games)
+		Set<Long> availableGameIds=LibraryScanner.findGames(pathResolver.findSteamApps());
+		availableGameIds.removeAll(existingGameIds);
+		for (Long gameId : availableGameIds) {
+			try {
+				VdfNode gameNode=new VdfNode();
+				gameNode.setName(gameId.toString());
+				Data gameData=scraper.load(gameId);
+				addTags(gameNode, gameData);
+				appsNode.addChild(gameNode);
+			} catch (Exception e) {
+				System.err.println(e);
+			}
+		}
+		System.out.println(vdfRoot.toPrettyString());
+	}
+
+	private static void addTags(VdfNode gameNode, Data gameData) {
+		VdfNode tagNode=Iterables.find(gameNode.getChildren(), new Predicate<VdfNode>() {
+			@Override
+			public boolean apply(VdfNode input) {
+				return "tags".equals(input.getName());
+			}
+		}, null);
+		if (null==tagNode) {
+			tagNode=new VdfNode();
+			tagNode.setName("tags");
+			gameNode.addChild(tagNode);
+		}
+		Set<String> existingTags=Sets.newLinkedHashSet(Iterables.transform(tagNode.getAttributes(), new Function<VdfAttribute, String>() {
+			@Override
+			public String apply(VdfAttribute input) {
+				return input.getValue();
+			}
+		}));
+		Iterables.addAll(existingTags, Iterables.transform(gameData.getCategories(), new Function<Category, String>() {
+			@Override
+			public String apply(Category input) {
+				return input.getDescription();
+			}
+		}));
+		Iterables.addAll(existingTags, Iterables.transform(gameData.getGenres(), new Function<Genre, String>() {
+			@Override
+			public String apply(Genre input) {
+				return input.getDescription();
+			}
+		}));
+
+		List<VdfAttribute> attributes=tagNode.getAttributes();
+		attributes.clear();
+		for (String tag : existingTags) {
+			tagNode.addAttribute(Integer.toString(attributes.size()), tag);
+		}
+
+	}
+
+	protected static VdfRoot doSloppyParse(InputStream iStream) throws RecognitionException, IOException {
+		ANTLRInputStream ais=new ANTLRInputStream(iStream);
+		ValveTokenLexer lexer=new ValveTokenLexer(ais);
+		SloppyParser parser=new SloppyParser(new CommonTokenStream(lexer));
+		VdfRoot root=parser.main();
+		return root;
+	}
+
+}
