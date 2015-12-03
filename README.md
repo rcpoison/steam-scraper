@@ -21,7 +21,7 @@ usage: java -jar steam-scraper-*.one-jar.jar
 Remove silly tags and overwrite sharedconfig.vdf directly (might want to quit steam first)
 
 ```
-java -jar steam-scraper-*.one-jar.jar --remove "Steam Achievements" "Steam Trading Cards" "Steam Cloud" "Steam Leaderboards" "Valve Anti-Cheat enabled" "Steam Workshop" -w
+java -jar steam-scraper-*.one-jar.jar --remove "Steam Achievements" "Steam Trading Cards" "Steam Cloud" "Steam Leaderboards" "Valve Anti-Cheat enabled" "Steam Workshop" "Includes Source SDK" "Commentary available" "Captions available" "Stats" -w
 ```
 
 
