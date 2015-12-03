@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.HashSet;
 import java.util.List;
@@ -48,12 +49,18 @@ public class Tagger {
 	 */
 	public static void main(String[] args) throws IOException, RecognitionException {
 		Tagger tagger=new Tagger(new Scraper());
-		tagger.tag();
+		final Path path;
+		if (1==args.length) {
+			path=Paths.get(args[0]);
+			System.err.println("overriding path: "+path.toString());
+		} else {
+			PathResolver pathResolver=new PathResolver();
+			path=pathResolver.findSharedConfig();
+		}
+		tagger.tag(path);
 	}
-	
-	public void tag() throws IOException, RecognitionException {
-		PathResolver pathResolver=new PathResolver();
-		final Path path=pathResolver.findSharedConfig();
+
+	public void tag(Path path) throws IOException, RecognitionException {
 		InputStream inputStream=Files.newInputStream(path, StandardOpenOption.READ);
 		VdfRoot vdfRoot=doSloppyParse(inputStream);
 		IOUtils.closeQuietly(inputStream);
@@ -75,6 +82,7 @@ public class Tagger {
 
 		}
 		// vdf doesn't contain all games, add the rest (at least the installed games)
+		PathResolver pathResolver=new PathResolver();
 		Set<Long> availableGameIds=LibraryScanner.findGames(pathResolver.findSteamApps());
 		availableGameIds.removeAll(existingGameIds);
 		for (Long gameId : availableGameIds) {
@@ -89,7 +97,7 @@ public class Tagger {
 			}
 		}
 		System.out.println(vdfRoot.toPrettyString());
-		System.err.println("pipe to file and copy to: " + path.toString());
+		System.err.println("pipe to file and copy to: "+path.toString());
 	}
 
 	private static void addTags(VdfNode gameNode, Data gameData) {
