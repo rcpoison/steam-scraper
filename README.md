@@ -13,4 +13,4 @@ Build dependencies:
 Building:
 mvn clean install
 
-inaries will be in the target directory
+Binaries will be in the target directory
