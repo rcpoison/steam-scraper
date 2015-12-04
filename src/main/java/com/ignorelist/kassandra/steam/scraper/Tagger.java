@@ -101,7 +101,7 @@ public class Tagger {
 			Files.copy(path, backup, StandardCopyOption.REPLACE_EXISTING);
 			Files.copy(new ByteArrayInputStream(tagged.toPrettyString().getBytes(StandardCharsets.UTF_8)), path, StandardCopyOption.REPLACE_EXISTING);
 		} else {
-			System.err.println(tagged.toPrettyString());
+			System.out.println(tagged.toPrettyString());
 			System.err.println("pipe to file and copy to: "+path.toString());
 		}
 	}
