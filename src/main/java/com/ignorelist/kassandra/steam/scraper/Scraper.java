@@ -79,10 +79,6 @@ public class Scraper {
 	}
 
 	private static byte[] openUrlData(long gameId) throws MalformedURLException, IOException {
-		ObjectMapper mapper=new ObjectMapper();
-		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-		mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-		mapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
 		final String urlString="http://store.steampowered.com/api/appdetails/?appids="+gameId;
 		URL url=new URL(urlString);
 		URLConnection uRLConnection=url.openConnection();
