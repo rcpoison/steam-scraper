@@ -23,6 +23,14 @@ public class LibraryScanner {
 
 	private static final Pattern PATTERN=Pattern.compile("appmanifest_(\\d+)\\.acf");
 
+	public static Set<Long> findGames(Iterable<Path> paths) throws IOException {
+		Set<Long> gameIds=new HashSet<>();
+		for (Path p : paths) {
+			gameIds.addAll(findGames(p));
+		}
+		return gameIds;
+	}
+
 	public static Set<Long> findGames(Path path) throws IOException {
 		Set<Long> gameIds=new HashSet<>();
 		DirectoryStream<Path> directoryStream=null;
