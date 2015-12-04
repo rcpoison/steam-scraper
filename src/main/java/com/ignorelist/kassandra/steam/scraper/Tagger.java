@@ -13,8 +13,6 @@ import com.google.common.collect.Sets;
 import com.ignorelist.kassandra.steam.scraper.model.Category;
 import com.ignorelist.kassandra.steam.scraper.model.Data;
 import com.ignorelist.kassandra.steam.scraper.model.Genre;
-import com.technofovea.hl2parse.vdf.SloppyParser;
-import com.technofovea.hl2parse.vdf.ValveTokenLexer;
 import com.technofovea.hl2parse.vdf.VdfAttribute;
 import com.technofovea.hl2parse.vdf.VdfNode;
 import com.technofovea.hl2parse.vdf.VdfRoot;
@@ -33,8 +31,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import org.antlr.runtime.ANTLRInputStream;
-import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -124,7 +120,7 @@ public class Tagger {
 
 	public VdfNode tag(Path path, boolean addCategories, boolean addGenres, Set<String> removeTags) throws IOException, RecognitionException {
 		InputStream inputStream=Files.newInputStream(path, StandardOpenOption.READ);
-		VdfRoot vdfRoot=doSloppyParse(inputStream);
+		VdfRoot vdfRoot=VdfParser.parse(inputStream);
 		IOUtils.closeQuietly(inputStream);
 
 		JXPathContext pathContext=JXPathContext.newContext(vdfRoot);
@@ -204,14 +200,6 @@ public class Tagger {
 			tagNode.addAttribute(Integer.toString(attributes.size()), tag);
 		}
 
-	}
-
-	protected static VdfRoot doSloppyParse(InputStream iStream) throws RecognitionException, IOException {
-		ANTLRInputStream ais=new ANTLRInputStream(iStream);
-		ValveTokenLexer lexer=new ValveTokenLexer(ais);
-		SloppyParser parser=new SloppyParser(new CommonTokenStream(lexer));
-		VdfRoot root=parser.main();
-		return root;
 	}
 
 }
