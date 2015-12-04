@@ -39,7 +39,7 @@ public class PathResolver {
 		throw new IllegalStateException("can't resolve apps directory");
 	}
 
-	public Path findSharedConfig() throws IOException {
+	public Set<Path> findSharedConfig() throws IOException {
 		Path base=findSteamBase().resolve("steam").resolve("userdata");
 		final Set<Path> paths=new HashSet<>();
 		Files.walkFileTree(base, new SimpleFileVisitor<Path>() {
@@ -52,8 +52,10 @@ public class PathResolver {
 			}
 			
 		});
-
-		return Iterables.getOnlyElement(paths);
+		if (paths.isEmpty()) {
+			throw new IllegalStateException("can't find sharedconfig.vdf");
+		}
+		return paths;
 
 	}
 }

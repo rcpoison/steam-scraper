@@ -6,6 +6,7 @@
 package com.ignorelist.kassandra.steam.scraper;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -29,6 +30,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.antlr.runtime.ANTLRInputStream;
@@ -62,7 +64,7 @@ public class Tagger {
 	public static void main(String[] args) throws IOException, RecognitionException, ParseException {
 		Options options=new Options();
 		options.addOption("w", false, "directly overwrite sharedconfig.vdf (potentially dangerous)");
-		options.addOption(Option.builder("f").hasArg().argName("file").desc("required if using multiple accounts: absolute path to desired sharedconfig.vdf").build());
+		options.addOption(Option.builder("f").hasArgs().argName("file").desc("required if using multiple accounts: absolute path to desired sharedconfig.vdf").build());
 		options.addOption("h", "help", false, "show this help");
 		options.addOption("c", false, "don't add categories");
 		options.addOption("g", false, "don't add genres");
@@ -78,12 +80,24 @@ public class Tagger {
 		}
 
 		Tagger tagger=new Tagger(new Scraper());
-		final Path path;
+		Set<Path> paths=new LinkedHashSet<>();
 		if (commandLine.hasOption("f")) {
-			path=Paths.get(commandLine.getOptionValue("f"));
+			String[] passedPaths=commandLine.getOptionValues("f");
+			if (0==passedPaths.length) {
+				throw new IllegalArgumentException("no paths passed in -f");
+			}
+			for (String p : passedPaths) {
+				paths.add(Paths.get(p));
+			}
+
 		} else {
 			PathResolver pathResolver=new PathResolver();
-			path=pathResolver.findSharedConfig();
+			paths=pathResolver.findSharedConfig();
+		}
+
+		if (paths.size()>1&&!commandLine.hasOption("w")) {
+			System.err.println("multiple sharedconfig.vdf available:\n"+Joiner.on("\n").join(paths)+"\n, can not write to stdout. Need to specify -w or -f with a single sharedconfig.vdf");
+			System.exit(1);
 		}
 
 		final String[] removeTagsValues=commandLine.getOptionValues("remove");
@@ -94,15 +108,17 @@ public class Tagger {
 			removeTags=Collections.<String>emptySet();
 		}
 
-		VdfNode tagged=tagger.tag(path, !commandLine.hasOption("c"), !commandLine.hasOption("g"), removeTags);
+		for (Path path : paths) {
+			VdfNode tagged=tagger.tag(path, !commandLine.hasOption("c"), !commandLine.hasOption("g"), removeTags);
 
-		if (commandLine.hasOption("w")) {
-			Path backup=path.getParent().resolve(path.getFileName().toString()+".bak"+new Date().getTime());
-			Files.copy(path, backup, StandardCopyOption.REPLACE_EXISTING);
-			Files.copy(new ByteArrayInputStream(tagged.toPrettyString().getBytes(StandardCharsets.UTF_8)), path, StandardCopyOption.REPLACE_EXISTING);
-		} else {
-			System.out.println(tagged.toPrettyString());
-			System.err.println("pipe to file and copy to: "+path.toString());
+			if (commandLine.hasOption("w")) {
+				Path backup=path.getParent().resolve(path.getFileName().toString()+".bak"+new Date().getTime());
+				Files.copy(path, backup, StandardCopyOption.REPLACE_EXISTING);
+				Files.copy(new ByteArrayInputStream(tagged.toPrettyString().getBytes(StandardCharsets.UTF_8)), path, StandardCopyOption.REPLACE_EXISTING);
+			} else {
+				System.out.println(tagged.toPrettyString());
+				System.err.println("pipe to file and copy to: "+path.toString());
+			}
 		}
 	}
 
