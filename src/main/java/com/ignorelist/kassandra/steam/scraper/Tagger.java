@@ -141,7 +141,7 @@ public class Tagger {
 		}
 		// vdf doesn't contain all games, add the rest (at least the installed games)
 		PathResolver pathResolver=new PathResolver();
-		Set<Long> availableGameIds=LibraryScanner.findGames(pathResolver.findSteamApps());
+		Set<Long> availableGameIds=LibraryScanner.findGames(pathResolver.findAllLibraryDirectories());
 		availableGameIds.removeAll(existingGameIds);
 		for (Long gameId : availableGameIds) {
 			try {
