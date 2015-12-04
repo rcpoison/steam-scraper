@@ -68,7 +68,9 @@ public class PathResolver {
 						Integer.parseInt(va.getName());
 						Path libraryDirectory=Paths.get(va.getValue());
 						libraryDirectories.add(resolveAppsDirectory(libraryDirectory));
-					} catch (Exception e) {
+					} catch (NumberFormatException nfe) {
+					} catch (IllegalStateException ise) {
+						System.err.println(ise);
 					}
 				}
 			}
