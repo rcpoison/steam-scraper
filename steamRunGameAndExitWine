@@ -1,5 +1,4 @@
 #!/bin/bash
-# REDWIBDD-H8SUI-FJYY0-8R2RE-3YDCM
 #203160 tomb raider
 #20900 wticher
 export WINEPREFIX=/usr/local/games/_wine/steam
