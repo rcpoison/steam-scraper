@@ -23,6 +23,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
+import org.antlr.runtime.RecognitionException;
 import org.apache.commons.io.IOUtils;
 
 /**
@@ -32,30 +33,29 @@ import org.apache.commons.io.IOUtils;
 public class Scraper {
 
 	private final RateLimiter rateLimiter=RateLimiter.create(200d/5d/60d);
-	
 
 	/**
 	 * @param args the command line arguments
 	 */
-	public static void main(String[] args) throws MalformedURLException, IOException {
-		final Path path=Paths.get("/home/poison/.steam/steam/steamapps");
-		final Set<Long> gameIds=LibraryScanner.findGames(path);
+	public static void main(String[] args) throws MalformedURLException, IOException, RecognitionException {
+		final Set<Long> gameIds=LibraryScanner.findGames(new PathResolver().findAllLibraryDirectories());
 		System.err.println(Joiner.on(',').join(gameIds));
 		Scraper s=new Scraper();
 		s.load(gameIds);
-
 	}
 
 	public Scraper() {
 	}
-	
-	
 
 	public Collection<Data> load(final Set<Long> gameIds) throws IOException {
 		Collection<Data> games=new ArrayList<>();
 		for (Long gameId : gameIds) {
-			Data data=load(gameId);
-			games.add(data);
+			try {
+				Data data=load(gameId);
+				games.add(data);
+			} catch (Exception e) {
+				System.err.println("---"+gameId+"---> failed");
+			}
 		}
 		return games;
 	}
@@ -110,7 +110,7 @@ public class Scraper {
 		try {
 			return mapper.treeToValue(mapper.readTree(data).findValue("data"), Data.class);
 		} catch (Exception e) {
-			System.err.println(new String(data));
+			//System.err.println(new String(data));
 			throw e;
 		}
 	}
