@@ -64,6 +64,7 @@ public class Tagger {
 		options.addOption("h", "help", false, "show this help and print paths");
 		options.addOption("c", false, "don't add categories");
 		options.addOption("g", false, "don't add genres");
+		options.addOption("u", false, "add user tags");
 		options.addOption(Option.builder("r").longOpt("remove").hasArgs().argName("category").desc("remove categories").build());
 
 		CommandLineParser parser=new DefaultParser();
@@ -108,7 +109,7 @@ public class Tagger {
 		}
 
 		for (Path path : paths) {
-			VdfNode tagged=tagger.tag(path, !commandLine.hasOption("c"), !commandLine.hasOption("g"), removeTags);
+			VdfNode tagged=tagger.tag(path, !commandLine.hasOption("c"), !commandLine.hasOption("g"), commandLine.hasOption("u"), removeTags);
 
 			if (commandLine.hasOption("w")) {
 				Path backup=path.getParent().resolve(path.getFileName().toString()+".bak"+new Date().getTime());
@@ -121,7 +122,7 @@ public class Tagger {
 		}
 	}
 
-	public VdfNode tag(Path path, boolean addCategories, boolean addGenres, Set<String> removeTags) throws IOException, RecognitionException {
+	public VdfNode tag(Path path, boolean addCategories, boolean addGenres, boolean addUserTags, Set<String> removeTags) throws IOException, RecognitionException {
 		InputStream inputStream=Files.newInputStream(path, StandardOpenOption.READ);
 		VdfRoot vdfRoot=VdfParser.parse(inputStream);
 		IOUtils.closeQuietly(inputStream);
@@ -135,8 +136,7 @@ public class Tagger {
 			try {
 				final long gameId=Long.parseLong(gameNode.getName());
 				existingGameIds.add(gameId);
-				Data gameData=scraper.load(gameId);
-				addTags(gameNode, gameData, addCategories, addGenres, removeTags);
+				addTags(gameId, gameNode, addCategories, addGenres, addUserTags, removeTags);
 			} catch (Exception e) {
 				System.err.println(e);
 			}
@@ -150,8 +150,7 @@ public class Tagger {
 			try {
 				VdfNode gameNode=new VdfNode();
 				gameNode.setName(gameId.toString());
-				Data gameData=scraper.load(gameId);
-				addTags(gameNode, gameData, addCategories, addGenres, removeTags);
+				addTags(gameId, gameNode, addCategories, addGenres, addUserTags, removeTags);
 				appsNode.addChild(gameNode);
 			} catch (Exception e) {
 				System.err.println(e);
@@ -160,7 +159,20 @@ public class Tagger {
 		return vdfRoot;
 	}
 
-	private static void addTags(VdfNode gameNode, Data gameData, boolean addCategories, boolean addGenres, Set<String> removeTags) {
+	private void addTags(Long gameId, VdfNode gameNode, boolean addCategories, boolean addGenres, boolean addUserTags, Set<String> removeTags) throws IOException {
+		Data gameData=scraper.load(gameId);
+		Set<String> userTags;
+		if (addUserTags) {
+			try {
+				userTags=scraper.loadUserTags(gameId);
+			} catch (Exception e) {
+				System.err.println(e);
+				userTags=Collections.<String>emptySet();
+			}
+		} else {
+			userTags=Collections.<String>emptySet();
+		}
+
 		VdfNode tagNode=Iterables.find(gameNode.getChildren(), new Predicate<VdfNode>() {
 			@Override
 			public boolean apply(VdfNode input) {
@@ -194,6 +206,8 @@ public class Tagger {
 				}
 			}));
 		}
+		
+		existingTags.addAll(userTags);
 
 		existingTags.removeAll(removeTags);
 
