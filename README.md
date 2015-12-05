@@ -16,6 +16,7 @@ usage: java -jar steam-scraper-*.one-jar.jar
  -g                       don't add genres
  -h,--help                show this help and print paths
  -r,--remove <category>   remove categories
+ -u                       add user tags
  -w                       directly overwrite sharedconfig.vdf (potentially
                           dangerous)
 ```
@@ -28,12 +29,15 @@ java -jar steam-scraper-*.one-jar.jar --remove "Steam Achievements" "Steam Tradi
 ```
 
 
-## Build dependencies:
+## Build dependencies
 * maven 3
 * openjdk 7/8
 
-### Building:
+### Building
 ```mvn clean install```
 
 Binaries will be in the `target` directory
 
+
+## Donation
+BTC address: 172B8DJvbEJito89MjRQA7vwGhfqgm6Q6s
