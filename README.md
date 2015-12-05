@@ -3,17 +3,18 @@ Scrapes game data from the Steam shop API and adds categories from the shop cate
 
 ![Categories](/steamCategories.jpg?raw=true "Categories")
 
-Shop API is rate limited and suffers from non-deterministic failures, run the script multiple times to gather more data.
 
 ## Usage
+
+Shop API is rate limited and suffers from non-deterministic failures, run the script multiple times to gather more data.
+Please exit steam before running.
 
 ```
 usage: java -jar steam-scraper-*.one-jar.jar
  -c                       don't add categories
- -f <file>                required if using multiple accounts: absolute
-                          path to desired sharedconfig.vdf
+ -f <file>                absolute path to sharedconfig.vdf to use
  -g                       don't add genres
- -h,--help                show this help
+ -h,--help                show this help and print paths
  -r,--remove <category>   remove categories
  -w                       directly overwrite sharedconfig.vdf (potentially
                           dangerous)
