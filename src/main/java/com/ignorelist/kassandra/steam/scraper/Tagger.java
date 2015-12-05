@@ -114,7 +114,9 @@ public class Tagger {
 			if (commandLine.hasOption("w")) {
 				Path backup=path.getParent().resolve(path.getFileName().toString()+".bak"+new Date().getTime());
 				Files.copy(path, backup, StandardCopyOption.REPLACE_EXISTING);
+				System.err.println("backup up "+path+" to "+backup);
 				Files.copy(new ByteArrayInputStream(tagged.toPrettyString().getBytes(StandardCharsets.UTF_8)), path, StandardCopyOption.REPLACE_EXISTING);
+				System.err.println("wrote "+path);
 			} else {
 				System.out.println(tagged.toPrettyString());
 				System.err.println("pipe to file and copy to: "+path.toString());
@@ -206,7 +208,7 @@ public class Tagger {
 				}
 			}));
 		}
-		
+
 		existingTags.addAll(userTags);
 
 		existingTags.removeAll(removeTags);
