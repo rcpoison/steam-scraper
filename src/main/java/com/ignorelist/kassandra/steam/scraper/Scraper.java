@@ -71,6 +71,7 @@ public class Scraper {
 			URL url=new URL("http://store.steampowered.com/app/"+gameId);
 			URLConnection uRLConnection=url.openConnection();
 			uRLConnection.setRequestProperty("User-Agent", "Valve/Steam HTTP Client 1.0 (tenfoot)");
+			uRLConnection.setRequestProperty("Cookie", "birthtime=-3599; lastagecheckage=1-January-1970");
 			InputStream inputStream=uRLConnection.getInputStream();
 			try {
 				Files.copy(inputStream, cacheFilePath);
