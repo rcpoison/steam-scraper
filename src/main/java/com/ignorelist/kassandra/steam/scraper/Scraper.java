@@ -22,9 +22,14 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import org.antlr.runtime.RecognitionException;
 import org.apache.commons.io.IOUtils;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 /**
  *
@@ -60,8 +65,33 @@ public class Scraper {
 		return games;
 	}
 
+	public Set<String> loadUserTags(Long gameId) throws IOException {
+		Path cacheFilePath=cacheFilePathHtml(gameId);
+		if (!Files.exists(cacheFilePath)) {
+			URL url=new URL("http://store.steampowered.com/app/"+gameId);
+			URLConnection uRLConnection=url.openConnection();
+			uRLConnection.setRequestProperty("User-Agent", "Valve/Steam HTTP Client 1.0 (tenfoot)");
+			InputStream inputStream=uRLConnection.getInputStream();
+			try {
+				Files.copy(inputStream, cacheFilePath);
+			} finally {
+				IOUtils.closeQuietly(inputStream);
+			}
+		}
+		Document document=Jsoup.parse(cacheFilePath.toFile(), "UTF-8");
+		Elements tagElements=document.select("a.app_tag");
+		Set<String> tags=new LinkedHashSet<>();
+		for (Element e : tagElements) {
+			final String tag=e.text();
+			if (null!=tag) {
+				tags.add(tag.trim());
+			}
+		}
+		return tags;
+	}
+
 	public Data load(Long gameId) throws IOException {
-		Path cacheFilePath=cacheFilePath(gameId);
+		Path cacheFilePath=cacheFilePathJson(gameId);
 		byte[] jsonData;
 		Data data;
 		if (Files.exists(cacheFilePath)) {
@@ -94,12 +124,22 @@ public class Scraper {
 		}
 	}
 
-	private static Path cacheFilePath(long appId) throws IOException {
+	private static Path cacheFilePathJson(long appId) throws IOException {
+		Path dir=cacheFilePathBase();
+		return dir.resolve(Long.toString(appId)+".json");
+	}
+
+	private static Path cacheFilePathHtml(long appId) throws IOException {
+		Path dir=cacheFilePathBase();
+		return dir.resolve(Long.toString(appId)+".html");
+	}
+
+	private static Path cacheFilePathBase() throws IOException {
 		Path dir=Paths.get(System.getProperty("user.home"), ".steam-scraper");
 		if (!Files.exists(dir)) {
 			Files.createDirectories(dir);
 		}
-		return dir.resolve(Long.toString(appId)+".json");
+		return dir;
 	}
 
 	private static Data loadAppData(byte[] data) throws MalformedURLException, IOException {
