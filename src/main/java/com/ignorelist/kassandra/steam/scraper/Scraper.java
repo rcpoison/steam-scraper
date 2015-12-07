@@ -101,7 +101,7 @@ public class Scraper {
 			data=loadAppData(jsonData);
 		} else {
 			double acquiredIn=rateLimiter.acquire();
-			System.err.println("---"+gameId+"---> slept: "+acquiredIn+"s");
+			System.err.println("---"+gameId+"---> rate-limiter waited: "+acquiredIn+"s");
 			jsonData=openUrlData(gameId);
 			data=loadAppData(jsonData);
 			Files.write(cacheFilePath, jsonData, StandardOpenOption.CREATE);
