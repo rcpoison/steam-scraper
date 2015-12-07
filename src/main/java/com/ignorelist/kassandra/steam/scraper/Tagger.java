@@ -162,7 +162,9 @@ public class Tagger {
 	private void addTags(Long gameId, VdfNode gameNode, boolean addCategories, boolean addGenres, boolean addUserTags, Set<String> removeTags) throws IOException {
 		Data gameData=null;
 		try {
-			gameData=scraper.load(gameId);
+			if (addCategories||addGenres) {
+				gameData=scraper.load(gameId);
+			}
 		} catch (Exception e) {
 		}
 		Set<String> userTags;
