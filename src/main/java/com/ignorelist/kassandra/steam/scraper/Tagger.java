@@ -162,7 +162,12 @@ public class Tagger {
 	}
 
 	private void addTags(Long gameId, VdfNode gameNode, boolean addCategories, boolean addGenres, boolean addUserTags, Set<String> removeTags) throws IOException {
-		Data gameData=scraper.load(gameId);
+		Data gameData=null;
+		try {
+			gameData=scraper.load(gameId);
+		} catch (Exception e) {
+			System.err.println(gameId+": failed to load data from storefront API");
+		}
 		Set<String> userTags;
 		if (addUserTags) {
 			try {
@@ -192,7 +197,7 @@ public class Tagger {
 				return input.getValue();
 			}
 		}));
-		if (addCategories) {
+		if (null!=gameData&&addCategories) {
 			Iterables.addAll(existingTags, Iterables.transform(gameData.getCategories(), new Function<Category, String>() {
 				@Override
 				public String apply(Category input) {
@@ -200,7 +205,7 @@ public class Tagger {
 				}
 			}));
 		}
-		if (addGenres) {
+		if (null!=gameData&&addGenres) {
 			Iterables.addAll(existingTags, Iterables.transform(gameData.getGenres(), new Function<Genre, String>() {
 				@Override
 				public String apply(Genre input) {
