@@ -140,7 +140,6 @@ public class Tagger {
 				existingGameIds.add(gameId);
 				addTags(gameId, gameNode, addCategories, addGenres, addUserTags, removeTags);
 			} catch (Exception e) {
-				System.err.println(e);
 			}
 
 		}
@@ -155,7 +154,6 @@ public class Tagger {
 				addTags(gameId, gameNode, addCategories, addGenres, addUserTags, removeTags);
 				appsNode.addChild(gameNode);
 			} catch (Exception e) {
-				System.err.println(e);
 			}
 		}
 		return vdfRoot;
@@ -166,7 +164,6 @@ public class Tagger {
 		try {
 			gameData=scraper.load(gameId);
 		} catch (Exception e) {
-			System.err.println(gameId+": failed to load data from storefront API");
 		}
 		Set<String> userTags;
 		if (addUserTags) {

@@ -43,6 +43,25 @@ public class Scraper {
 	 * @param args the command line arguments
 	 */
 	public static void main(String[] args) throws MalformedURLException, IOException, RecognitionException {
+//		ObjectMapper mapper=new ObjectMapper();
+//		JsonNode rootNode=mapper.readTree(new URL("https://raw.githubusercontent.com/SteamDatabase/SteamLinux/master/GAMES.json"));
+//
+//		Scraper s=new Scraper();
+//		int i=0;
+//		for (Map.Entry<String, JsonNode> node : Lists.newArrayList(rootNode.fields())) {
+//			try {
+//				final long gameId=Long.parseLong(node.getKey());
+//				Data data=s.load(gameId);
+//				System.err.println(gameId+": "+data.getName());
+//				++i;
+//			} catch (Exception e) {
+//				System.err.println(e);
+//			}
+//		}
+//		System.err.println(i);
+//		System.exit(0);
+
+		// find ~/.steam-scraper -type f -size -80k -iname '*.html' -delete
 		final Set<Long> gameIds=LibraryScanner.findGames(new PathResolver().findAllLibraryDirectories());
 		System.err.println(Joiner.on(',').join(gameIds));
 		Scraper s=new Scraper();
@@ -59,7 +78,7 @@ public class Scraper {
 				Data data=load(gameId);
 				games.add(data);
 			} catch (Exception e) {
-				System.err.println("---"+gameId+"---> failed");
+				//System.err.println("---"+gameId+"---> failed");
 			}
 		}
 		return games;
@@ -100,12 +119,18 @@ public class Scraper {
 			jsonData=Files.readAllBytes(cacheFilePath);
 			data=loadAppData(jsonData);
 		} else {
-			double acquiredIn=rateLimiter.acquire();
-			System.err.println("---"+gameId+"---> rate-limiter waited: "+acquiredIn+"s");
-			jsonData=openUrlData(gameId);
-			data=loadAppData(jsonData);
-			Files.write(cacheFilePath, jsonData, StandardOpenOption.CREATE);
+			try {
+				double acquiredIn=rateLimiter.acquire();
+				System.err.println("---"+gameId+"---> rate-limiter waited: "+acquiredIn+"s");
+				jsonData=openUrlData(gameId);
+				data=loadAppData(jsonData);
+				Files.write(cacheFilePath, jsonData, StandardOpenOption.CREATE);
+			} catch (Exception e) {
+				System.err.println(gameId+": failed to load data from storefront API");
+				throw e;
+			}
 		}
+		System.err.println(gameId+": "+data.getName());
 		return data;
 	}
 
