@@ -6,6 +6,7 @@
 package com.ignorelist.kassandra.steam.scraper;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.technofovea.hl2parse.vdf.VdfNode;
 import com.technofovea.hl2parse.vdf.VdfRoot;
@@ -22,6 +23,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import org.antlr.runtime.RecognitionException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -68,8 +70,9 @@ public class Tagger {
 			System.out.println("\nsharedconfig files:\n"+Joiner.on("\n").join(pathResolver.findSharedConfig()));
 			System.exit(0);
 		}
+		final Scraper scraper=new Scraper();
 
-		Tagger tagger=new Tagger(new Scraper());
+		Tagger tagger=new Tagger(scraper);
 		Set<Path> sharedConfigPaths=new LinkedHashSet<>();
 		if (commandLine.hasOption("f")) {
 			String[] passedPaths=commandLine.getOptionValues("f");
@@ -97,25 +100,48 @@ public class Tagger {
 		} else {
 			removeTags=Collections.<String>emptySet();
 		}
-		
+
 		final boolean addCategories=!commandLine.hasOption("c");
 		final boolean addGenres=!commandLine.hasOption("g");
 		final boolean addUserTags=commandLine.hasOption("u");
+		final boolean printTags=commandLine.hasOption("p");
 
-		for (Path path : sharedConfigPaths) {
-			VdfNode tagged=tagger.tag(path, addCategories, addGenres, addUserTags, removeTags);
+		if (printTags) {
+			Set<String> availableTags=tagger.getAvailableTags(sharedConfigPaths);
+			Joiner.on("\n").appendTo(System.out, availableTags);
+		} else {
+			for (Path path : sharedConfigPaths) {
+				VdfNode tagged=tagger.tag(path, addCategories, addGenres, addUserTags, removeTags);
 
-			if (commandLine.hasOption("w")) {
-				Path backup=path.getParent().resolve(path.getFileName().toString()+".bak"+new Date().getTime());
-				Files.copy(path, backup, StandardCopyOption.REPLACE_EXISTING);
-				System.err.println("backup up "+path+" to "+backup);
-				Files.copy(new ByteArrayInputStream(tagged.toPrettyString().getBytes(StandardCharsets.UTF_8)), path, StandardCopyOption.REPLACE_EXISTING);
-				System.err.println("wrote "+path);
-			} else {
-				System.out.println(tagged.toPrettyString());
-				System.err.println("pipe to file and copy to: "+path.toString());
+				if (commandLine.hasOption("w")) {
+					Path backup=path.getParent().resolve(path.getFileName().toString()+".bak"+new Date().getTime());
+					Files.copy(path, backup, StandardCopyOption.REPLACE_EXISTING);
+					System.err.println("backup up "+path+" to "+backup);
+					Files.copy(new ByteArrayInputStream(tagged.toPrettyString().getBytes(StandardCharsets.UTF_8)), path, StandardCopyOption.REPLACE_EXISTING);
+					System.err.println("wrote "+path);
+				} else {
+					System.out.println(tagged.toPrettyString());
+					System.err.println("pipe to file and copy to: "+path.toString());
+				}
 			}
 		}
+	}
+
+	public Set<String> getAvailableTags(Set<Path> sharedConfigPaths) throws IOException, RecognitionException {
+		Set<String> availableTags=new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+		Set<Long> availableGameIds=new HashSet<>();
+		for (Path path : sharedConfigPaths) {
+			SharedConfig sharedConfig=new SharedConfig(path);
+			availableGameIds.addAll(sharedConfig.getGameIds());
+			for (Long gameId : sharedConfig.getGameIds()) {
+				availableTags.addAll(sharedConfig.getTags(gameId));
+			}
+		}
+		availableGameIds.addAll(LibraryScanner.findGames(new PathResolver().findAllLibraryDirectories()));
+		for (Long gameId : availableGameIds) {
+			availableTags.addAll(scraper.loadExternalTags(gameId, true, true, true));
+		}
+		return availableTags;
 	}
 
 	public VdfRoot tag(Path path, boolean addCategories, boolean addGenres, boolean addUserTags, Set<String> removeTags) throws IOException, RecognitionException {
