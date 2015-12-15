@@ -54,6 +54,7 @@ public class Tagger {
 		options.addOption("c", false, "don't add categories");
 		options.addOption("g", false, "don't add genres");
 		options.addOption("u", false, "add user tags");
+		options.addOption("p", false, "print all available tags");
 		options.addOption(Option.builder("r").longOpt("remove").hasArgs().argName("category").desc("remove categories").build());
 
 		CommandLineParser parser=new DefaultParser();
@@ -96,9 +97,13 @@ public class Tagger {
 		} else {
 			removeTags=Collections.<String>emptySet();
 		}
+		
+		final boolean addCategories=!commandLine.hasOption("c");
+		final boolean addGenres=!commandLine.hasOption("g");
+		final boolean addUserTags=commandLine.hasOption("u");
 
 		for (Path path : sharedConfigPaths) {
-			VdfNode tagged=tagger.tag(path, !commandLine.hasOption("c"), !commandLine.hasOption("g"), commandLine.hasOption("u"), removeTags);
+			VdfNode tagged=tagger.tag(path, addCategories, addGenres, addUserTags, removeTags);
 
 			if (commandLine.hasOption("w")) {
 				Path backup=path.getParent().resolve(path.getFileName().toString()+".bak"+new Date().getTime());
