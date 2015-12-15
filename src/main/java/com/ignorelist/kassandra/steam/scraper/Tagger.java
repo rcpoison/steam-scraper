@@ -5,8 +5,8 @@
  */
 package com.ignorelist.kassandra.steam.scraper;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.technofovea.hl2parse.vdf.VdfNode;
 import com.technofovea.hl2parse.vdf.VdfRoot;
@@ -39,6 +39,69 @@ import org.apache.commons.cli.ParseException;
  */
 public class Tagger {
 
+	public static class TaggerOptions {
+
+		private boolean addCategories;
+		private boolean addGenres;
+		private boolean addUserTags;
+		private Set<String> removeTags;
+		private Set<String> whiteList;
+		private boolean removeNotWhiteListed;
+
+		public boolean isAddCategories() {
+			return addCategories;
+		}
+
+		public void setAddCategories(boolean addCategories) {
+			this.addCategories=addCategories;
+		}
+
+		public boolean isAddGenres() {
+			return addGenres;
+		}
+
+		public void setAddGenres(boolean addGenres) {
+			this.addGenres=addGenres;
+		}
+
+		public boolean isAddUserTags() {
+			return addUserTags;
+		}
+
+		public void setAddUserTags(boolean addUserTags) {
+			this.addUserTags=addUserTags;
+		}
+
+		public Set<String> getRemoveTags() {
+			return removeTags;
+		}
+
+		public void setRemoveTags(Set<String> removeTags) {
+			this.removeTags=removeTags;
+		}
+
+		public Set<String> getWhiteList() {
+			return whiteList;
+		}
+
+		public void setWhiteList(Set<String> whiteList) {
+			this.whiteList=whiteList;
+		}
+
+		public boolean isRemoveNotWhiteListed() {
+			return removeNotWhiteListed;
+		}
+
+		public void setRemoveNotWhiteListed(boolean removeNotWhiteListed) {
+			this.removeNotWhiteListed=removeNotWhiteListed;
+		}
+
+		@Override
+		public String toString() {
+			return "TaggerOptions{"+"addCategories="+addCategories+", addGenres="+addGenres+", addUserTags="+addUserTags+", removeTags="+removeTags+", whiteList="+whiteList+", removeNotWhiteListed="+removeNotWhiteListed+'}';
+		}
+
+	}
 	private final Scraper scraper;
 
 	public Tagger(Scraper scraper) {
@@ -81,6 +144,7 @@ public class Tagger {
 			System.exit(1);
 		}
 
+		TaggerOptions taggerOptions=new TaggerOptions();
 		final String[] removeTagsValues=commandLine.getOptionValues("remove");
 		final Set<String> removeTags;
 		if (null!=removeTagsValues) {
@@ -88,10 +152,23 @@ public class Tagger {
 		} else {
 			removeTags=Collections.<String>emptySet();
 		}
+		taggerOptions.setRemoveTags(removeTags);
 
+		if (commandLine.hasOption("i")) {
+			final Path whitelistPath=Paths.get(commandLine.getOptionValue("i"));
+			Set<String> whiteList=new HashSet<>(Files.readAllLines(whitelistPath, Charsets.UTF_8));
+			taggerOptions.setWhiteList(whiteList);
+		}
+
+		final boolean removeNotWhiteListed=!commandLine.hasOption("I");
+		taggerOptions.setRemoveNotWhiteListed(removeNotWhiteListed);
 		final boolean addCategories=!commandLine.hasOption("c");
+		taggerOptions.setAddCategories(addCategories);
 		final boolean addGenres=!commandLine.hasOption("g");
+		taggerOptions.setAddGenres(addGenres);
 		final boolean addUserTags=commandLine.hasOption("u");
+		taggerOptions.setAddUserTags(addUserTags);
+
 		final boolean printTags=commandLine.hasOption("p");
 
 		if (printTags) {
@@ -99,7 +176,7 @@ public class Tagger {
 			Joiner.on("\n").appendTo(System.out, availableTags);
 		} else {
 			for (Path path : sharedConfigPaths) {
-				VdfNode tagged=tagger.tag(path, addCategories, addGenres, addUserTags, removeTags);
+				VdfNode tagged=tagger.tag(path, taggerOptions);
 
 				if (commandLine.hasOption("w")) {
 					Path backup=path.getParent().resolve(path.getFileName().toString()+".bak"+new Date().getTime());
@@ -133,6 +210,8 @@ public class Tagger {
 		options.addOption("u", false, "add user tags");
 		options.addOption("p", false, "print all available tags");
 		options.addOption(Option.builder("r").longOpt("remove").hasArgs().argName("category").desc("remove categories").build());
+		options.addOption(Option.builder("i").hasArg().argName("file").desc("whitelist for tags to include").build());
+		options.addOption("I", false, "remove all existing tags not in specified whitelist");
 		return options;
 	}
 
@@ -153,7 +232,7 @@ public class Tagger {
 		return availableTags;
 	}
 
-	public VdfRoot tag(Path path, boolean addCategories, boolean addGenres, boolean addUserTags, Set<String> removeTags) throws IOException, RecognitionException {
+	public VdfRoot tag(Path path, TaggerOptions taggerOptions) throws IOException, RecognitionException {
 		SharedConfig sharedConfig=new SharedConfig(path);
 		Set<Long> existingGameIds=new HashSet<>();
 		for (Map.Entry<Long, VdfNode> entry : sharedConfig.getGameNodeMap().entrySet()) {
@@ -161,7 +240,7 @@ public class Tagger {
 			try {
 				final long gameId=entry.getKey();
 				existingGameIds.add(gameId);
-				addTags(sharedConfig, gameId, addCategories, addGenres, addUserTags, removeTags);
+				addTags(sharedConfig, gameId, taggerOptions);
 			} catch (Exception e) {
 			}
 
@@ -172,19 +251,25 @@ public class Tagger {
 		availableGameIds.removeAll(existingGameIds);
 		for (Long gameId : availableGameIds) {
 			try {
-				addTags(sharedConfig, gameId, addCategories, addGenres, addUserTags, removeTags);
+				addTags(sharedConfig, gameId, taggerOptions);
 			} catch (Exception e) {
 			}
 		}
 		return sharedConfig.getRootNode();
 	}
 
-	private void addTags(SharedConfig sharedConfig, Long gameId, boolean addCategories, boolean addGenres, boolean addUserTags, Set<String> removeTags) throws IOException {
+	private void addTags(SharedConfig sharedConfig, Long gameId, TaggerOptions taggerOptions) throws IOException {
 		Set<String> existingTags=sharedConfig.getTags(gameId);
 
-		Set<String> externalTags=scraper.loadExternalTags(gameId, addCategories, addGenres, addUserTags);
+		Set<String> externalTags=scraper.loadExternalTags(gameId, taggerOptions.isAddCategories(), taggerOptions.isAddGenres(), taggerOptions.isAddUserTags());
+		if (null!=taggerOptions.getWhiteList()&&!taggerOptions.getWhiteList().isEmpty()) {
+			externalTags.retainAll(taggerOptions.getWhiteList());
+		}
 		existingTags.addAll(externalTags);
-		existingTags.removeAll(removeTags);
+		existingTags.removeAll(taggerOptions.getRemoveTags());
+		if (null!=taggerOptions.getWhiteList()&&!taggerOptions.getWhiteList().isEmpty()&&taggerOptions.isRemoveNotWhiteListed()) {
+			existingTags.retainAll(taggerOptions.getWhiteList());
+		}
 
 		sharedConfig.setTags(gameId, existingTags);
 
