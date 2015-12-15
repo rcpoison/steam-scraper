@@ -5,12 +5,8 @@
  */
 package com.ignorelist.kassandra.steam.scraper;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-import com.technofovea.hl2parse.vdf.VdfAttribute;
 import com.technofovea.hl2parse.vdf.VdfNode;
 import com.technofovea.hl2parse.vdf.VdfRoot;
 import java.io.ByteArrayInputStream;
@@ -24,7 +20,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.antlr.runtime.RecognitionException;
