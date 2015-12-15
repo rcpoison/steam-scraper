@@ -15,6 +15,10 @@ usage: java -jar steam-scraper-*.one-jar.jar
  -f <file>                absolute path to sharedconfig.vdf to use
  -g                       don't add genres
  -h,--help                show this help and print paths
+ -i <file>                whitelist for tags to include
+ -I                       remove all existing tags not in specified
+                          whitelist
+ -p                       print all available tags
  -r,--remove <category>   remove categories
  -u                       add user tags
  -w                       directly overwrite sharedconfig.vdf (potentially
