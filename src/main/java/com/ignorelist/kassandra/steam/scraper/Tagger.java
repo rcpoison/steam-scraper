@@ -55,11 +55,7 @@ public class Tagger {
 		CommandLine commandLine=parser.parse(options, args);
 
 		if (commandLine.hasOption("h")) {
-			HelpFormatter formatter=new HelpFormatter();
-			formatter.printHelp("java -jar steam-scraper-*.one-jar.jar", options);
-			PathResolver pathResolver=new PathResolver();
-			System.out.println("\nlibrary directories:\n"+Joiner.on("\n").join(pathResolver.findAllLibraryDirectories()));
-			System.out.println("\nsharedconfig files:\n"+Joiner.on("\n").join(pathResolver.findSharedConfig()));
+			printHelp(options);
 			System.exit(0);
 		}
 		final Scraper scraper=new Scraper();
@@ -117,6 +113,14 @@ public class Tagger {
 				}
 			}
 		}
+	}
+
+	private static void printHelp(Options options) throws RecognitionException, IOException {
+		HelpFormatter formatter=new HelpFormatter();
+		formatter.printHelp("java -jar steam-scraper-*.one-jar.jar", options);
+		PathResolver pathResolver=new PathResolver();
+		System.out.println("\nlibrary directories:\n"+Joiner.on("\n").join(pathResolver.findAllLibraryDirectories()));
+		System.out.println("\nsharedconfig files:\n"+Joiner.on("\n").join(pathResolver.findSharedConfig()));
 	}
 
 	private static Options buildOptions() {
