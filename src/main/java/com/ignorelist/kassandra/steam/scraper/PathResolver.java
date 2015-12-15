@@ -26,7 +26,7 @@ import org.apache.commons.io.IOUtils;
 
 /**
  *
- * @author Andreas Schnaiter <rc.poison@gmail.com>
+ * @author poison
  */
 public class PathResolver {
 
