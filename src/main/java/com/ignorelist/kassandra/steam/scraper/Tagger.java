@@ -202,7 +202,7 @@ public class Tagger {
 
 	private static Options buildOptions() {
 		Options options=new Options();
-		options.addOption("w", false, "directly overwrite sharedconfig.vdf (potentially dangerous)");
+		options.addOption("w", false, "directly overwrite sharedconfig.vdf (quit steam before running!)");
 		options.addOption(Option.builder("f").hasArgs().argName("file").desc("absolute path to sharedconfig.vdf to use").build());
 		options.addOption("h", "help", false, "show this help and print paths");
 		options.addOption("c", false, "don't add categories");
