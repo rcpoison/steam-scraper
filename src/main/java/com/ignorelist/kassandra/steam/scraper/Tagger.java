@@ -10,9 +10,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-import com.ignorelist.kassandra.steam.scraper.model.Category;
-import com.ignorelist.kassandra.steam.scraper.model.Data;
-import com.ignorelist.kassandra.steam.scraper.model.Genre;
 import com.technofovea.hl2parse.vdf.VdfAttribute;
 import com.technofovea.hl2parse.vdf.VdfNode;
 import com.technofovea.hl2parse.vdf.VdfRoot;
@@ -178,7 +175,7 @@ public class Tagger {
 			}
 		}));
 
-		Set<String> externalTags=loadExternalTags(gameId, addCategories, addGenres, addUserTags);
+		Set<String> externalTags=scraper.loadExternalTags(gameId, addCategories, addGenres, addUserTags);
 		existingTags.addAll(externalTags);
 		existingTags.removeAll(removeTags);
 
@@ -188,41 +185,6 @@ public class Tagger {
 			tagNode.addAttribute(Integer.toString(attributes.size()), tag);
 		}
 
-	}
-
-	private Set<String> loadExternalTags(Long gameId, boolean addCategories, boolean addGenres, boolean addUserTags) {
-		Set<String> externalTags=new LinkedHashSet<>();
-		if (addCategories||addGenres) {
-			try {
-				final Data gameData=scraper.load(gameId);
-				if (addCategories) {
-					Iterables.addAll(externalTags, Iterables.transform(gameData.getCategories(), new Function<Category, String>() {
-						@Override
-						public String apply(Category input) {
-							return input.getDescription();
-						}
-					}));
-				}
-				if (addGenres) {
-					Iterables.addAll(externalTags, Iterables.transform(gameData.getGenres(), new Function<Genre, String>() {
-						@Override
-						public String apply(Genre input) {
-							return input.getDescription();
-						}
-					}));
-				}
-			} catch (Exception e) {
-			}
-		}
-
-		if (addUserTags) {
-			try {
-				externalTags.addAll(scraper.loadUserTags(gameId));
-			} catch (Exception e) {
-				System.err.println(e);
-			}
-		}
-		return externalTags;
 	}
 
 }

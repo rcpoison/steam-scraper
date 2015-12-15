@@ -7,10 +7,14 @@ package com.ignorelist.kassandra.steam.scraper;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.RateLimiter;
+import com.ignorelist.kassandra.steam.scraper.model.Category;
 import com.ignorelist.kassandra.steam.scraper.model.Data;
+import com.ignorelist.kassandra.steam.scraper.model.Genre;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -69,6 +73,41 @@ public class Scraper {
 	}
 
 	public Scraper() {
+	}
+
+	public Set<String> loadExternalTags(Long gameId, boolean addCategories, boolean addGenres, boolean addUserTags) {
+		Set<String> externalTags=new LinkedHashSet<>();
+		if (addCategories||addGenres) {
+			try {
+				final Data gameData=load(gameId);
+				if (addCategories) {
+					Iterables.addAll(externalTags, Iterables.transform(gameData.getCategories(), new Function<Category, String>() {
+						@Override
+						public String apply(Category input) {
+							return input.getDescription();
+						}
+					}));
+				}
+				if (addGenres) {
+					Iterables.addAll(externalTags, Iterables.transform(gameData.getGenres(), new Function<Genre, String>() {
+						@Override
+						public String apply(Genre input) {
+							return input.getDescription();
+						}
+					}));
+				}
+			} catch (Exception e) {
+			}
+		}
+
+		if (addUserTags) {
+			try {
+				externalTags.addAll(loadUserTags(gameId));
+			} catch (Exception e) {
+				System.err.println(e);
+			}
+		}
+		return externalTags;
 	}
 
 	public Collection<Data> load(final Set<Long> gameIds) throws IOException {
