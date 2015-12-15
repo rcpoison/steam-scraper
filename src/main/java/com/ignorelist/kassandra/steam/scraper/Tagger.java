@@ -15,13 +15,11 @@ import com.technofovea.hl2parse.vdf.VdfNode;
 import com.technofovea.hl2parse.vdf.VdfRoot;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -36,8 +34,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.jxpath.JXPathContext;
 
 /**
  *
@@ -121,16 +117,10 @@ public class Tagger {
 		}
 	}
 
-	public VdfNode tag(Path path, boolean addCategories, boolean addGenres, boolean addUserTags, Set<String> removeTags) throws IOException, RecognitionException {
-		InputStream inputStream=Files.newInputStream(path, StandardOpenOption.READ);
-		VdfRoot vdfRoot=VdfParser.parse(inputStream);
-		IOUtils.closeQuietly(inputStream);
-
-		JXPathContext pathContext=JXPathContext.newContext(vdfRoot);
-		VdfNode appsNode=(VdfNode) pathContext.getValue("//children[name='apps']");
-		System.err.println(appsNode.getChildren().size());
+	public VdfRoot tag(Path path, boolean addCategories, boolean addGenres, boolean addUserTags, Set<String> removeTags) throws IOException, RecognitionException {
+		SharedConfig sharedConfig=new SharedConfig(path);
 		Set<Long> existingGameIds=new HashSet<>();
-		for (VdfNode gameNode : appsNode.getChildren()) {
+		for (VdfNode gameNode : sharedConfig.getGameNodes()) {
 			//System.err.println(gameNode.getName());
 			try {
 				final long gameId=Long.parseLong(gameNode.getName());
@@ -149,11 +139,11 @@ public class Tagger {
 				VdfNode gameNode=new VdfNode();
 				gameNode.setName(gameId.toString());
 				addTags(gameId, gameNode, addCategories, addGenres, addUserTags, removeTags);
-				appsNode.addChild(gameNode);
+				sharedConfig.addGameNode(gameNode);
 			} catch (Exception e) {
 			}
 		}
-		return vdfRoot;
+		return sharedConfig.getRootNode();
 	}
 
 	private void addTags(Long gameId, VdfNode gameNode, boolean addCategories, boolean addGenres, boolean addUserTags, Set<String> removeTags) throws IOException {

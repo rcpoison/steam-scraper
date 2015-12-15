@@ -16,7 +16,7 @@ import org.antlr.runtime.RecognitionException;
 
 /**
  *
- * @author Andreas Schnaiter <rc.poison@gmail.com>
+ * @author poison
  */
 public class VdfParser {
 
@@ -27,5 +27,5 @@ public class VdfParser {
 		VdfRoot root=parser.main();
 		return root;
 	}
-
+	
 }
