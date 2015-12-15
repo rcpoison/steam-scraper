@@ -160,25 +160,6 @@ public class Tagger {
 	}
 
 	private void addTags(Long gameId, VdfNode gameNode, boolean addCategories, boolean addGenres, boolean addUserTags, Set<String> removeTags) throws IOException {
-		Data gameData=null;
-		try {
-			if (addCategories||addGenres) {
-				gameData=scraper.load(gameId);
-			}
-		} catch (Exception e) {
-		}
-		Set<String> userTags;
-		if (addUserTags) {
-			try {
-				userTags=scraper.loadUserTags(gameId);
-			} catch (Exception e) {
-				System.err.println(e);
-				userTags=Collections.<String>emptySet();
-			}
-		} else {
-			userTags=Collections.<String>emptySet();
-		}
-
 		VdfNode tagNode=Iterables.find(gameNode.getChildren(), new Predicate<VdfNode>() {
 			@Override
 			public boolean apply(VdfNode input) {
@@ -196,25 +177,9 @@ public class Tagger {
 				return input.getValue();
 			}
 		}));
-		if (null!=gameData&&addCategories) {
-			Iterables.addAll(existingTags, Iterables.transform(gameData.getCategories(), new Function<Category, String>() {
-				@Override
-				public String apply(Category input) {
-					return input.getDescription();
-				}
-			}));
-		}
-		if (null!=gameData&&addGenres) {
-			Iterables.addAll(existingTags, Iterables.transform(gameData.getGenres(), new Function<Genre, String>() {
-				@Override
-				public String apply(Genre input) {
-					return input.getDescription();
-				}
-			}));
-		}
 
-		existingTags.addAll(userTags);
-
+		Set<String> externalTags=loadExternalTags(gameId, addCategories, addGenres, addUserTags);
+		existingTags.addAll(externalTags);
 		existingTags.removeAll(removeTags);
 
 		List<VdfAttribute> attributes=tagNode.getAttributes();
@@ -223,6 +188,41 @@ public class Tagger {
 			tagNode.addAttribute(Integer.toString(attributes.size()), tag);
 		}
 
+	}
+
+	private Set<String> loadExternalTags(Long gameId, boolean addCategories, boolean addGenres, boolean addUserTags) {
+		Set<String> externalTags=new LinkedHashSet<>();
+		if (addCategories||addGenres) {
+			try {
+				final Data gameData=scraper.load(gameId);
+				if (addCategories) {
+					Iterables.addAll(externalTags, Iterables.transform(gameData.getCategories(), new Function<Category, String>() {
+						@Override
+						public String apply(Category input) {
+							return input.getDescription();
+						}
+					}));
+				}
+				if (addGenres) {
+					Iterables.addAll(externalTags, Iterables.transform(gameData.getGenres(), new Function<Genre, String>() {
+						@Override
+						public String apply(Genre input) {
+							return input.getDescription();
+						}
+					}));
+				}
+			} catch (Exception e) {
+			}
+		}
+
+		if (addUserTags) {
+			try {
+				externalTags.addAll(scraper.loadUserTags(gameId));
+			} catch (Exception e) {
+				System.err.println(e);
+			}
+		}
+		return externalTags;
 	}
 
 }
