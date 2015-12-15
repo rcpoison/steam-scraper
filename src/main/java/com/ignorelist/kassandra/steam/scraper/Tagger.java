@@ -69,23 +69,23 @@ public class Tagger {
 		}
 
 		Tagger tagger=new Tagger(new Scraper());
-		Set<Path> paths=new LinkedHashSet<>();
+		Set<Path> sharedConfigPaths=new LinkedHashSet<>();
 		if (commandLine.hasOption("f")) {
 			String[] passedPaths=commandLine.getOptionValues("f");
 			if (0==passedPaths.length) {
 				throw new IllegalArgumentException("no paths passed in -f");
 			}
 			for (String p : passedPaths) {
-				paths.add(Paths.get(p));
+				sharedConfigPaths.add(Paths.get(p));
 			}
 
 		} else {
 			PathResolver pathResolver=new PathResolver();
-			paths=pathResolver.findSharedConfig();
+			sharedConfigPaths=pathResolver.findSharedConfig();
 		}
 
-		if (paths.size()>1&&!commandLine.hasOption("w")) {
-			System.err.println("multiple sharedconfig.vdf available:\n"+Joiner.on("\n").join(paths)+"\n, can not write to stdout. Need to specify -w or -f with a single sharedconfig.vdf");
+		if (sharedConfigPaths.size()>1&&!commandLine.hasOption("w")) {
+			System.err.println("multiple sharedconfig.vdf available:\n"+Joiner.on("\n").join(sharedConfigPaths)+"\n, can not write to stdout. Need to specify -w or -f with a single sharedconfig.vdf");
 			System.exit(1);
 		}
 
@@ -97,7 +97,7 @@ public class Tagger {
 			removeTags=Collections.<String>emptySet();
 		}
 
-		for (Path path : paths) {
+		for (Path path : sharedConfigPaths) {
 			VdfNode tagged=tagger.tag(path, !commandLine.hasOption("c"), !commandLine.hasOption("g"), commandLine.hasOption("u"), removeTags);
 
 			if (commandLine.hasOption("w")) {
