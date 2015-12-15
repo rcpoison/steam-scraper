@@ -49,15 +49,7 @@ public class Tagger {
 	 * @param args the command line arguments
 	 */
 	public static void main(String[] args) throws IOException, RecognitionException, ParseException {
-		Options options=new Options();
-		options.addOption("w", false, "directly overwrite sharedconfig.vdf (potentially dangerous)");
-		options.addOption(Option.builder("f").hasArgs().argName("file").desc("absolute path to sharedconfig.vdf to use").build());
-		options.addOption("h", "help", false, "show this help and print paths");
-		options.addOption("c", false, "don't add categories");
-		options.addOption("g", false, "don't add genres");
-		options.addOption("u", false, "add user tags");
-		options.addOption("p", false, "print all available tags");
-		options.addOption(Option.builder("r").longOpt("remove").hasArgs().argName("category").desc("remove categories").build());
+		Options options=buildOptions();
 
 		CommandLineParser parser=new DefaultParser();
 		CommandLine commandLine=parser.parse(options, args);
@@ -125,6 +117,19 @@ public class Tagger {
 				}
 			}
 		}
+	}
+
+	private static Options buildOptions() {
+		Options options=new Options();
+		options.addOption("w", false, "directly overwrite sharedconfig.vdf (potentially dangerous)");
+		options.addOption(Option.builder("f").hasArgs().argName("file").desc("absolute path to sharedconfig.vdf to use").build());
+		options.addOption("h", "help", false, "show this help and print paths");
+		options.addOption("c", false, "don't add categories");
+		options.addOption("g", false, "don't add genres");
+		options.addOption("u", false, "add user tags");
+		options.addOption("p", false, "print all available tags");
+		options.addOption(Option.builder("r").longOpt("remove").hasArgs().argName("category").desc("remove categories").build());
+		return options;
 	}
 
 	public Set<String> getAvailableTags(Set<Path> sharedConfigPaths) throws IOException, RecognitionException {
