@@ -87,6 +87,7 @@ public class Scraper {
 	public Set<String> loadUserTags(Long gameId) throws IOException {
 		Path cacheFilePath=cacheFilePathHtml(gameId);
 		if (!Files.exists(cacheFilePath)) {
+			System.err.println("--- html: "+gameId+"---> downloading");
 			URL url=new URL("http://store.steampowered.com/app/"+gameId);
 			URLConnection uRLConnection=url.openConnection();
 			uRLConnection.setRequestProperty("User-Agent", "Valve/Steam HTTP Client 1.0 (tenfoot)");
@@ -97,6 +98,8 @@ public class Scraper {
 			} finally {
 				IOUtils.closeQuietly(inputStream);
 			}
+		} else {
+			System.err.println("--- html: "+gameId+"---> cached");
 		}
 		Document document=Jsoup.parse(cacheFilePath.toFile(), "UTF-8");
 		Elements tagElements=document.select("a.app_tag");
@@ -115,13 +118,13 @@ public class Scraper {
 		byte[] jsonData;
 		Data data;
 		if (Files.exists(cacheFilePath)) {
-			System.err.println("---"+gameId+"---> cached");
+			System.err.println("--- json: "+gameId+"---> cached");
 			jsonData=Files.readAllBytes(cacheFilePath);
 			data=loadAppData(jsonData);
 		} else {
 			try {
 				double acquiredIn=rateLimiter.acquire();
-				System.err.println("---"+gameId+"---> rate-limiter waited: "+acquiredIn+"s");
+				System.err.println("--- json: "+gameId+"---> rate-limiter waited: "+acquiredIn+"s");
 				jsonData=openUrlData(gameId);
 				data=loadAppData(jsonData);
 				Files.write(cacheFilePath, jsonData, StandardOpenOption.CREATE);
