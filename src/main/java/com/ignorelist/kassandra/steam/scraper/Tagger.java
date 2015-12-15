@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.antlr.runtime.RecognitionException;
 import org.apache.commons.cli.CommandLine;
@@ -120,12 +121,12 @@ public class Tagger {
 	public VdfRoot tag(Path path, boolean addCategories, boolean addGenres, boolean addUserTags, Set<String> removeTags) throws IOException, RecognitionException {
 		SharedConfig sharedConfig=new SharedConfig(path);
 		Set<Long> existingGameIds=new HashSet<>();
-		for (VdfNode gameNode : sharedConfig.getGameNodes()) {
+		for (Map.Entry<Long, VdfNode> entry : sharedConfig.getGameNodeMap().entrySet()) {
 			//System.err.println(gameNode.getName());
 			try {
-				final long gameId=Long.parseLong(gameNode.getName());
+				final long gameId=entry.getKey();
 				existingGameIds.add(gameId);
-				addTags(gameId, gameNode, addCategories, addGenres, addUserTags, removeTags);
+				addTags(sharedConfig, gameId, addCategories, addGenres, addUserTags, removeTags);
 			} catch (Exception e) {
 			}
 
@@ -136,44 +137,21 @@ public class Tagger {
 		availableGameIds.removeAll(existingGameIds);
 		for (Long gameId : availableGameIds) {
 			try {
-				VdfNode gameNode=new VdfNode();
-				gameNode.setName(gameId.toString());
-				addTags(gameId, gameNode, addCategories, addGenres, addUserTags, removeTags);
-				sharedConfig.addGameNode(gameNode);
+				addTags(sharedConfig, gameId, addCategories, addGenres, addUserTags, removeTags);
 			} catch (Exception e) {
 			}
 		}
 		return sharedConfig.getRootNode();
 	}
 
-	private void addTags(Long gameId, VdfNode gameNode, boolean addCategories, boolean addGenres, boolean addUserTags, Set<String> removeTags) throws IOException {
-		VdfNode tagNode=Iterables.find(gameNode.getChildren(), new Predicate<VdfNode>() {
-			@Override
-			public boolean apply(VdfNode input) {
-				return "tags".equals(input.getName());
-			}
-		}, null);
-		if (null==tagNode) {
-			tagNode=new VdfNode();
-			tagNode.setName("tags");
-			gameNode.addChild(tagNode);
-		}
-		Set<String> existingTags=Sets.newLinkedHashSet(Iterables.transform(tagNode.getAttributes(), new Function<VdfAttribute, String>() {
-			@Override
-			public String apply(VdfAttribute input) {
-				return input.getValue();
-			}
-		}));
+	private void addTags(SharedConfig sharedConfig, Long gameId, boolean addCategories, boolean addGenres, boolean addUserTags, Set<String> removeTags) throws IOException {
+		Set<String> existingTags=sharedConfig.getTags(gameId);
 
 		Set<String> externalTags=scraper.loadExternalTags(gameId, addCategories, addGenres, addUserTags);
 		existingTags.addAll(externalTags);
 		existingTags.removeAll(removeTags);
 
-		List<VdfAttribute> attributes=tagNode.getAttributes();
-		attributes.clear();
-		for (String tag : existingTags) {
-			tagNode.addAttribute(Integer.toString(attributes.size()), tag);
-		}
+		sharedConfig.setTags(gameId, existingTags);
 
 	}
 
