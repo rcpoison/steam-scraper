@@ -1,5 +1,5 @@
 # steam-scraper
-Scrapes game data from the Steam shop API and adds categories from the shop categories and genres.
+Scrapes categories/genres/user tags from the Steam shop API/store pages and adds them as categories in the Steam client.
 
 ![Categories](/steamCategories.jpg?raw=true "Categories")
 
