@@ -7,6 +7,8 @@ package com.ignorelist.kassandra.steam.scraper;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.technofovea.hl2parse.vdf.VdfNode;
 import com.technofovea.hl2parse.vdf.VdfRoot;
@@ -17,7 +19,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -152,7 +153,13 @@ public class Tagger {
 
 		if (commandLine.hasOption("i")) {
 			final Path whitelistPath=Paths.get(commandLine.getOptionValue("i"));
-			Set<String> whiteList=new HashSet<>(Files.readAllLines(whitelistPath, Charsets.UTF_8));
+			Set<String> whiteList=Sets.newHashSet(
+					Iterables.filter(Files.readAllLines(whitelistPath, Charsets.UTF_8), new Predicate<String>() {
+						@Override
+						public boolean apply(String input) {
+							return null!=input&&input.length()>0&&!input.startsWith("#");
+						}
+					}));
 			taggerOptions.setWhiteList(whiteList);
 		}
 
