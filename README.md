@@ -18,11 +18,12 @@ usage: java -jar steam-scraper-*.one-jar.jar
  -i <file>                whitelist for tags to include
  -I                       remove all existing tags not in specified
                           whitelist
- -p                       print all available tags
+ -p                       print all available tags (respects -c, -g and
+                          -u)
  -r,--remove <category>   remove categories
  -u                       add user tags
- -w                       directly overwrite sharedconfig.vdf (potentially
-                          dangerous)
+ -w                       directly overwrite sharedconfig.vdf (quit steam
+                          before running!)
 ```
 
 ### Example

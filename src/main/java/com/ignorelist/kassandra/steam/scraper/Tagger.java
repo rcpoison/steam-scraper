@@ -208,7 +208,7 @@ public class Tagger {
 		options.addOption("c", false, "don't add categories");
 		options.addOption("g", false, "don't add genres");
 		options.addOption("u", false, "add user tags");
-		options.addOption("p", false, "print all available tags");
+		options.addOption("p", false, "print all available tags (respects -c, -g and -u)");
 		options.addOption(Option.builder("r").longOpt("remove").hasArgs().argName("category").desc("remove categories").build());
 		options.addOption(Option.builder("i").hasArg().argName("file").desc("whitelist for tags to include").build());
 		options.addOption("I", false, "remove all existing tags not in specified whitelist");
