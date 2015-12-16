@@ -33,6 +33,20 @@ java -jar steam-scraper-*.one-jar.jar --remove "Steam Achievements" "Steam Tradi
 ```
 
 
+Build Whitelist:
+```
+java -jar steam-scraper-*.one-jar.jar -u -p > whitelist.txt
+```
+Now edit the whitelist.txt with your sacred editor of choice and run:
+```
+java -jar steam-scraper-*.one-jar.jar -u -i whitelist.txt -w
+```
+Or, if you want to also get rid of existing categories in your sharedconfig which are not in the whitelist:
+```
+java -jar steam-scraper-*.one-jar.jar -u -i whitelist.txt -I -w
+```
+
+
 ## Build dependencies
 * maven 3
 * openjdk 7/8
