@@ -146,13 +146,9 @@ public class Tagger {
 
 		TaggerOptions taggerOptions=new TaggerOptions();
 		final String[] removeTagsValues=commandLine.getOptionValues("remove");
-		final Set<String> removeTags;
 		if (null!=removeTagsValues) {
-			removeTags=Sets.newHashSet(removeTagsValues);
-		} else {
-			removeTags=Collections.<String>emptySet();
+			taggerOptions.setRemoveTags(Sets.newHashSet(removeTagsValues));
 		}
-		taggerOptions.setRemoveTags(removeTags);
 
 		if (commandLine.hasOption("i")) {
 			final Path whitelistPath=Paths.get(commandLine.getOptionValue("i"));
@@ -266,7 +262,9 @@ public class Tagger {
 			externalTags.retainAll(taggerOptions.getWhiteList());
 		}
 		existingTags.addAll(externalTags);
-		existingTags.removeAll(taggerOptions.getRemoveTags());
+		if (null!=taggerOptions.getRemoveTags()) {
+			existingTags.removeAll(taggerOptions.getRemoveTags());
+		}
 		if (null!=taggerOptions.getWhiteList()&&!taggerOptions.getWhiteList().isEmpty()&&taggerOptions.isRemoveNotWhiteListed()) {
 			existingTags.retainAll(taggerOptions.getWhiteList());
 		}
