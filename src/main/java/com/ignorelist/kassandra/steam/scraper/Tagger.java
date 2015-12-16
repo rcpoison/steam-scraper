@@ -172,7 +172,7 @@ public class Tagger {
 		final boolean printTags=commandLine.hasOption("p");
 
 		if (printTags) {
-			Set<String> availableTags=tagger.getAvailableTags(sharedConfigPaths);
+			Set<String> availableTags=tagger.getAvailableTags(sharedConfigPaths, taggerOptions);
 			Joiner.on("\n").appendTo(System.out, availableTags);
 		} else {
 			for (Path path : sharedConfigPaths) {
@@ -215,7 +215,7 @@ public class Tagger {
 		return options;
 	}
 
-	public Set<String> getAvailableTags(Set<Path> sharedConfigPaths) throws IOException, RecognitionException {
+	public Set<String> getAvailableTags(Set<Path> sharedConfigPaths, TaggerOptions taggerOptions) throws IOException, RecognitionException {
 		Set<String> availableTags=new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 		Set<Long> availableGameIds=new HashSet<>();
 		for (Path path : sharedConfigPaths) {
@@ -227,7 +227,7 @@ public class Tagger {
 		}
 		availableGameIds.addAll(LibraryScanner.findGames(new PathResolver().findAllLibraryDirectories()));
 		for (Long gameId : availableGameIds) {
-			availableTags.addAll(scraper.loadExternalTags(gameId, true, true, true));
+			availableTags.addAll(scraper.loadExternalTags(gameId, taggerOptions.isAddCategories(), taggerOptions.isAddGenres(), taggerOptions.isAddUserTags()));
 		}
 		return availableTags;
 	}
