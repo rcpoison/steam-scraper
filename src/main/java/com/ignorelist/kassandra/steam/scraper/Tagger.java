@@ -160,7 +160,7 @@ public class Tagger {
 			taggerOptions.setWhiteList(whiteList);
 		}
 
-		final boolean removeNotWhiteListed=!commandLine.hasOption("I");
+		final boolean removeNotWhiteListed=commandLine.hasOption("I");
 		taggerOptions.setRemoveNotWhiteListed(removeNotWhiteListed);
 		final boolean addCategories=!commandLine.hasOption("c");
 		taggerOptions.setAddCategories(addCategories);
