@@ -9,6 +9,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.technofovea.hl2parse.vdf.VdfNode;
 import com.technofovea.hl2parse.vdf.VdfRoot;
@@ -181,10 +182,7 @@ public class Tagger {
 			try {
 				Properties replacementProperties=new Properties();
 				replacementProperties.load(replacementFileReader);
-				Map<String, String> replacementMap=new HashMap<>();
-				for (Map.Entry<Object, Object> e : replacementProperties.entrySet()) {
-					replacementMap.put(e.getKey().toString().trim(), e.getValue().toString().trim());
-				}
+				Map<String, String> replacementMap=Maps.fromProperties(replacementProperties);
 				taggerOptions.setReplacementMap(replacementMap);
 			} finally {
 				IOUtils.closeQuietly(replacementFileReader);
