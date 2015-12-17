@@ -12,6 +12,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.technofovea.hl2parse.vdf.VdfNode;
 import com.technofovea.hl2parse.vdf.VdfRoot;
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -20,9 +21,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import org.antlr.runtime.RecognitionException;
@@ -33,6 +36,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -48,6 +52,7 @@ public class Tagger {
 		private Set<String> removeTags;
 		private Set<String> whiteList;
 		private boolean removeNotWhiteListed;
+		private Map<String, String> replacementMap;
 
 		public boolean isAddCategories() {
 			return addCategories;
@@ -95,6 +100,14 @@ public class Tagger {
 
 		public void setRemoveNotWhiteListed(boolean removeNotWhiteListed) {
 			this.removeNotWhiteListed=removeNotWhiteListed;
+		}
+
+		public Map<String, String> getReplacementMap() {
+			return replacementMap;
+		}
+
+		public void setReplacementMap(Map<String, String> replacementMap) {
+			this.replacementMap=replacementMap;
 		}
 
 		@Override
@@ -162,6 +175,22 @@ public class Tagger {
 					}));
 			taggerOptions.setWhiteList(whiteList);
 		}
+		if (commandLine.hasOption("r")) {
+			Path replacementFile=Paths.get(commandLine.getOptionValue("r"));
+			final BufferedReader replacementFileReader=Files.newBufferedReader(replacementFile, Charsets.UTF_8);
+			try {
+				Properties replacementProperties=new Properties();
+				replacementProperties.load(replacementFileReader);
+				Map<String, String> replacementMap=new HashMap<>();
+				for (Map.Entry<Object, Object> e : replacementProperties.entrySet()) {
+					replacementMap.put(e.getKey().toString().trim(), e.getValue().toString().trim());
+				}
+				taggerOptions.setReplacementMap(replacementMap);
+			} finally {
+				IOUtils.closeQuietly(replacementFileReader);
+			}
+
+		}
 
 		final boolean removeNotWhiteListed=commandLine.hasOption("I");
 		taggerOptions.setRemoveNotWhiteListed(removeNotWhiteListed);
@@ -215,6 +244,7 @@ public class Tagger {
 		options.addOption(Option.builder("r").longOpt("remove").hasArgs().argName("category").desc("remove categories").build());
 		options.addOption(Option.builder("i").hasArg().argName("file").desc("whitelist for tags to include").build());
 		options.addOption("I", false, "remove all existing tags not in specified whitelist");
+		options.addOption(Option.builder("r").hasArg().argName("file").desc("file containing replacements").build());
 		return options;
 	}
 
@@ -275,7 +305,13 @@ public class Tagger {
 		if (null!=taggerOptions.getWhiteList()&&!taggerOptions.getWhiteList().isEmpty()&&taggerOptions.isRemoveNotWhiteListed()) {
 			existingTags.retainAll(taggerOptions.getWhiteList());
 		}
-
+		if (null!=taggerOptions.getReplacementMap()) {
+			for (Map.Entry<String, String> e : taggerOptions.getReplacementMap().entrySet()) {
+				if (existingTags.remove(e.getKey())) {
+					existingTags.add(e.getValue());
+				}
+			}
+		}
 		sharedConfig.setTags(gameId, existingTags);
 
 	}
