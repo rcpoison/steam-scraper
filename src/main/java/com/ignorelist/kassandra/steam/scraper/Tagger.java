@@ -242,9 +242,9 @@ public class Tagger {
 		options.addOption("u", false, "add user tags");
 		options.addOption("p", false, "print all available tags (respects -c, -g and -u)");
 		options.addOption(Option.builder("r").longOpt("remove").hasArgs().argName("category").desc("remove categories").build());
-		options.addOption(Option.builder("i").hasArg().argName("file").desc("whitelist for tags to include").build());
+		options.addOption(Option.builder("i").hasArg().argName("file").desc("whitelist for tags to include (one tag per line)").build());
 		options.addOption("I", false, "remove all existing tags not in specified whitelist");
-		options.addOption(Option.builder("R").hasArg().argName("file").desc("file containing replacements").build());
+		options.addOption(Option.builder("R").hasArg().argName("file").desc("file containing replacements (one replacement per line, in the format original=replacement)").build());
 		return options;
 	}
 

@@ -15,12 +15,14 @@ usage: java -jar steam-scraper-*.one-jar.jar
  -f <file>                absolute path to sharedconfig.vdf to use
  -g                       don't add genres
  -h,--help                show this help and print paths
- -i <file>                whitelist for tags to include
+ -i <file>                whitelist for tags to include (one tag per line)
  -I                       remove all existing tags not in specified
                           whitelist
  -p                       print all available tags (respects -c, -g and
                           -u)
  -r,--remove <category>   remove categories
+ -R <file>                file containing replacements (one replacement
+                          per line, in the format original=replacement)
  -u                       add user tags
  -w                       directly overwrite sharedconfig.vdf (quit steam
                           before running!)
@@ -47,6 +49,13 @@ Or, if you want to also get rid of existing categories in your sharedconfig whic
 java -jar steam-scraper-*.one-jar.jar -u -i whitelist.txt -I -w
 ```
 
+
+Replacement file example:
+```
+1990's = 1990s
+Rogue-lite = Rogue-like
+Single-player = Singleplayer
+```
 
 ## Build dependencies
 * maven 3
