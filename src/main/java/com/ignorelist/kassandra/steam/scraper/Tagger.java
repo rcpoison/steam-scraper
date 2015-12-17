@@ -12,9 +12,9 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.technofovea.hl2parse.vdf.VdfNode;
 import com.technofovea.hl2parse.vdf.VdfRoot;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -177,7 +177,7 @@ public class Tagger {
 		}
 		if (commandLine.hasOption("R")) {
 			Path replacementFile=Paths.get(commandLine.getOptionValue("R"));
-			final BufferedReader replacementFileReader=Files.newBufferedReader(replacementFile, Charsets.UTF_8);
+			final Reader replacementFileReader=Files.newBufferedReader(replacementFile, Charsets.UTF_8);
 			try {
 				Properties replacementProperties=new Properties();
 				replacementProperties.load(replacementFileReader);
