@@ -175,8 +175,8 @@ public class Tagger {
 					}));
 			taggerOptions.setWhiteList(whiteList);
 		}
-		if (commandLine.hasOption("r")) {
-			Path replacementFile=Paths.get(commandLine.getOptionValue("r"));
+		if (commandLine.hasOption("R")) {
+			Path replacementFile=Paths.get(commandLine.getOptionValue("R"));
 			final BufferedReader replacementFileReader=Files.newBufferedReader(replacementFile, Charsets.UTF_8);
 			try {
 				Properties replacementProperties=new Properties();
@@ -244,7 +244,7 @@ public class Tagger {
 		options.addOption(Option.builder("r").longOpt("remove").hasArgs().argName("category").desc("remove categories").build());
 		options.addOption(Option.builder("i").hasArg().argName("file").desc("whitelist for tags to include").build());
 		options.addOption("I", false, "remove all existing tags not in specified whitelist");
-		options.addOption(Option.builder("r").hasArg().argName("file").desc("file containing replacements").build());
+		options.addOption(Option.builder("R").hasArg().argName("file").desc("file containing replacements").build());
 		return options;
 	}
 
