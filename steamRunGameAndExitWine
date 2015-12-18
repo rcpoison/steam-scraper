@@ -5,6 +5,10 @@ export WINEPREFIX=/usr/local/games/_wine/steam
 export XMODIFIERS=''
 cd $WINEPREFIX/'drive_c/Program Files/Steam'
 #CHKCMD="pgrep -l -w -f '.*steamapps\\common\\.*\.exe.*'"
+
+# FUCK YOU
+sed -ri 's/("SkipOfflineModeWarning"\s+)"0"/\1"1"/' $WINEPREFIX/'drive_c/Program Files/Steam/config/loginusers.vdf'
+
 wine Steam.exe steam://rungameid/$1 &
 # give steam some time to login and start the game
 for i in $(seq 1 30); do
