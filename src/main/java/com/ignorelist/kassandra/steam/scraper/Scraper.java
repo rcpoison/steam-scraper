@@ -128,10 +128,7 @@ public class Scraper {
 		if (!Files.exists(cacheFilePath)) {
 			System.err.println("--- html: "+gameId+"---> downloading");
 			URL url=new URL("http://store.steampowered.com/app/"+gameId);
-			URLConnection uRLConnection=url.openConnection();
-			uRLConnection.setRequestProperty("User-Agent", "Valve/Steam HTTP Client 1.0 (tenfoot)");
-			uRLConnection.setRequestProperty("Cookie", "birthtime=-3599; lastagecheckage=1-January-1970");
-			InputStream inputStream=uRLConnection.getInputStream();
+			InputStream inputStream=openInputStream(url);
 			try {
 				Files.copy(inputStream, cacheFilePath);
 			} finally {
@@ -179,17 +176,21 @@ public class Scraper {
 	private static byte[] openUrlData(long gameId) throws MalformedURLException, IOException {
 		final String urlString="http://store.steampowered.com/api/appdetails/?appids="+gameId;
 		URL url=new URL(urlString);
-		URLConnection uRLConnection=url.openConnection();
-		uRLConnection.setRequestProperty("User-Agent", "Valve/Steam HTTP Client 1.0 (tenfoot)");
-
-		InputStream inputStream=null;
+		InputStream inputStream=openInputStream(url);
 		try {
-			inputStream=uRLConnection.getInputStream();
 			return ByteStreams.toByteArray(inputStream);
-
 		} finally {
 			IOUtils.closeQuietly(inputStream);
 		}
+	}
+
+	private static InputStream openInputStream(URL url) throws IOException {
+		URLConnection uRLConnection=url.openConnection();
+		uRLConnection.setRequestProperty("User-Agent", "Valve/Steam HTTP Client 1.0 (tenfoot)");
+		uRLConnection.setRequestProperty("Cookie", "birthtime=-3599; lastagecheckage=1-January-1970");
+		uRLConnection.setConnectTimeout(2000);
+		uRLConnection.setReadTimeout(2000);
+		return uRLConnection.getInputStream();
 	}
 
 	private static Path cacheFilePathJson(long appId) throws IOException {
