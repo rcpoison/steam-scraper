@@ -1,7 +1,32 @@
 #!/bin/bash
 #203160 tomb raider
 #20900 wticher
-export WINEPREFIX=/usr/local/games/_wine/steam
+unset STEAM_CLIENT_CONFIG_FILE
+unset STEAMSCRIPT
+unset SteamAppId
+unset Steam3Master
+unset STEAMSCRIPT_VERSION
+unset SteamNoOverlayUI
+unset SteamTenfoot
+unset STEAMVIDEOTOKEN
+unset STEAM_RUNTIME
+unset SteamAppUser
+unset SteamUser
+unset SteamStreamingHardwareEncodingNVIDIA
+unset SteamGameId
+unset SteamStreamingHardwareEncodingIntel
+unset SteamLauncherUI
+unset SteamStreamingForceWindowedD3D9
+unset SteamStreamingMaximumResolution
+unset SteamStreamingAllowGameVsync
+unset SteamStreaming
+unset SteamStreamingHardwareEncodingAMD
+
+if [ -z "$WINEPREFIX" ]; then
+	export WINEPREFIX=/usr/local/games/_wine/steam
+fi
+echo "using WINEPREFIX: $WINEPREFIX"
+
 export XMODIFIERS=''
 cd $WINEPREFIX/'drive_c/Program Files/Steam'
 #CHKCMD="pgrep -l -w -f '.*steamapps\\common\\.*\.exe.*'"
