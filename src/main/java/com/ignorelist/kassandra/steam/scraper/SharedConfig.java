@@ -159,7 +159,7 @@ public class SharedConfig {
 		try {
 			return getTags(getTagNode(gameId));
 		} catch (NoSuchElementException nsee) {
-			return Collections.<String>emptySet();
+			return new HashSet<String>();
 		}
 	}
 
