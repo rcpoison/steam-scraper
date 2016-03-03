@@ -46,7 +46,7 @@ public class FileCache extends AbstractLoadingCache<String, InputStream> {
 
 	public FileCache(Path cacheDirectory, CacheLoader<String, ? extends InputStream> valueLoader, long expireAfterMillis) {
 		codec=new Base32();
-		stripedLock=Striped.lazyWeakReadWriteLock(8*Runtime.getRuntime().availableProcessors());
+		stripedLock=Striped.lazyWeakReadWriteLock(4*Runtime.getRuntime().availableProcessors());
 		this.cacheDirectory=cacheDirectory;
 		this.valueLoader=valueLoader;
 		this.expireAfterMillis=expireAfterMillis;
