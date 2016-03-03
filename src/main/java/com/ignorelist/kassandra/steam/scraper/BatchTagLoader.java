@@ -25,7 +25,7 @@ import java.util.logging.Logger;
  *
  * @author poison
  */
-public class BatchTagLoader {
+public class BatchTagLoader implements TagLoader {
 
 	private final TagLoader tagLoader;
 	private final int nThreads;
@@ -39,6 +39,11 @@ public class BatchTagLoader {
 		this(tagLoader, Runtime.getRuntime().availableProcessors()+1);
 	}
 
+	@Override
+	public Set<String> load(Long gameId, EnumSet<TagType> types) {
+		return tagLoader.load(gameId, types);
+	}
+
 	public SetMultimap<Long, String> load(Iterable<Long> gameIds, final EnumSet<TagType> types) {
 		ExecutorService executorService=Executors.newFixedThreadPool(nThreads);
 		Map<Long, Future<Set<String>>> futureResults=new HashMap<>();
@@ -46,7 +51,7 @@ public class BatchTagLoader {
 			futureResults.put(gameId, executorService.submit(new Callable<Set<String>>() {
 				@Override
 				public Set<String> call() throws Exception {
-					return tagLoader.load(gameId, types);
+					return load(gameId, types);
 				}
 			}));
 		}
