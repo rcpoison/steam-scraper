@@ -96,6 +96,13 @@ public class PathResolver {
 			throw new IllegalStateException("can't find sharedconfig.vdf");
 		}
 		return paths;
+	}
 
+	public Path findCachePath(String subPath) throws IOException {
+		Path cachePath=Paths.get(System.getProperty("user.home"), ".cache", "steam-scraper", subPath);
+		if (!Files.isDirectory(cachePath)) {
+			Files.createDirectories(cachePath);
+		}
+		return cachePath;
 	}
 }
