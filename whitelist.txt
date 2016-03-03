@@ -1,0 +1,29 @@
+Action
+Adventure
+Arcade
+Captions available
+Casual
+Co-op
+favorite
+Full controller support
+FPS
+Fighting
+Flight
+Horror
+Indie
+Local Co-op
+Massively Multiplayer
+Multi-player
+Partial Controller Support
+Platformer
+Puzzle
+Racing
+RPG
+RTS
+Simulation
+Single-player
+Sports
+Stealth
+Strategy
+Survival
+VR Support

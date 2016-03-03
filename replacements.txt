@@ -1,0 +1,4 @@
+1990s = 1990's
+Rogue-lite = Rogue-like
+Singleplayer = Single-player
+Multiplayer = Multi-player
