@@ -14,12 +14,12 @@ import java.net.URLConnection;
  *
  * @author poison
  */
-public final class URLUtil {
+final class URLUtil {
 
 	private URLUtil() {
 	}
 
-	public static InputStream openInputStream(URL url) throws IOException {
+	static InputStream openInputStream(URL url) throws IOException {
 		URLConnection uRLConnection=url.openConnection();
 		uRLConnection.setRequestProperty("User-Agent", "Valve/Steam HTTP Client 1.0 (tenfoot)");
 		uRLConnection.setRequestProperty("Cookie", "birthtime=-3599; lastagecheckage=1-January-1970");
