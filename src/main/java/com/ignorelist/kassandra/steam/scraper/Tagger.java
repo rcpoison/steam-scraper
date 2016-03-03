@@ -8,8 +8,10 @@ package com.ignorelist.kassandra.steam.scraper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.technofovea.hl2parse.vdf.VdfNode;
 import com.technofovea.hl2parse.vdf.VdfRoot;
@@ -22,13 +24,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.antlr.runtime.RecognitionException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -47,36 +51,18 @@ public class Tagger {
 
 	public static class TaggerOptions {
 
-		private boolean addCategories;
-		private boolean addGenres;
-		private boolean addUserTags;
+		private EnumSet<TagType> tagTypes;
 		private Set<String> removeTags;
 		private Set<String> whiteList;
 		private boolean removeNotWhiteListed;
 		private Map<String, String> replacementMap;
 
-		public boolean isAddCategories() {
-			return addCategories;
+		public EnumSet<TagType> getTagTypes() {
+			return tagTypes;
 		}
 
-		public void setAddCategories(boolean addCategories) {
-			this.addCategories=addCategories;
-		}
-
-		public boolean isAddGenres() {
-			return addGenres;
-		}
-
-		public void setAddGenres(boolean addGenres) {
-			this.addGenres=addGenres;
-		}
-
-		public boolean isAddUserTags() {
-			return addUserTags;
-		}
-
-		public void setAddUserTags(boolean addUserTags) {
-			this.addUserTags=addUserTags;
+		public void setTagTypes(EnumSet<TagType> tagTypes) {
+			this.tagTypes=tagTypes;
 		}
 
 		public Set<String> getRemoveTags() {
@@ -113,14 +99,16 @@ public class Tagger {
 
 		@Override
 		public String toString() {
-			return "TaggerOptions{"+"addCategories="+addCategories+", addGenres="+addGenres+", addUserTags="+addUserTags+", removeTags="+removeTags+", whiteList="+whiteList+", removeNotWhiteListed="+removeNotWhiteListed+'}';
+			return "TaggerOptions{"+"tagTypes="+tagTypes+", removeTags="+removeTags+", whiteList="+whiteList+", removeNotWhiteListed="+removeNotWhiteListed+", replacementMap="+replacementMap+'}';
 		}
 
 	}
-	private final Scraper scraper;
+	private static final Logger LOG=Logger.getLogger(Tagger.class.getName());
 
-	public Tagger(Scraper scraper) {
-		this.scraper=scraper;
+	private final BatchTagLoader tagLoader;
+
+	public Tagger(BatchTagLoader tagLoader) {
+		this.tagLoader=tagLoader;
 	}
 
 	/**
@@ -136,9 +124,10 @@ public class Tagger {
 			printHelp(options);
 			System.exit(0);
 		}
-		final Scraper scraper=new Scraper();
+		final PathResolver pathResolver=new PathResolver();
+		final BatchTagLoader tagLoader=new BatchTagLoader(new HtmlTagLoader(pathResolver.findCachePath("html")));
 
-		Tagger tagger=new Tagger(scraper);
+		Tagger tagger=new Tagger(tagLoader);
 		Set<Path> sharedConfigPaths=new LinkedHashSet<>();
 		if (commandLine.hasOption("f")) {
 			String[] passedPaths=commandLine.getOptionValues("f");
@@ -150,7 +139,6 @@ public class Tagger {
 			}
 
 		} else {
-			PathResolver pathResolver=new PathResolver();
 			sharedConfigPaths=pathResolver.findSharedConfig();
 		}
 
@@ -192,12 +180,21 @@ public class Tagger {
 
 		final boolean removeNotWhiteListed=commandLine.hasOption("I");
 		taggerOptions.setRemoveNotWhiteListed(removeNotWhiteListed);
+
+		Set<TagType> tagTypes=new HashSet<>();
 		final boolean addCategories=!commandLine.hasOption("c");
-		taggerOptions.setAddCategories(addCategories);
+		if (addCategories) {
+			tagTypes.add(TagType.CATEGORY);
+		}
 		final boolean addGenres=!commandLine.hasOption("g");
-		taggerOptions.setAddGenres(addGenres);
+		if (addGenres) {
+			tagTypes.add(TagType.GENRE);
+		}
 		final boolean addUserTags=commandLine.hasOption("u");
-		taggerOptions.setAddUserTags(addUserTags);
+		if (addUserTags) {
+			tagTypes.add(TagType.USER);
+		}
+		taggerOptions.setTagTypes(EnumSet.copyOf(tagTypes));
 
 		final boolean printTags=commandLine.hasOption("p");
 
@@ -257,42 +254,40 @@ public class Tagger {
 			}
 		}
 		availableGameIds.addAll(LibraryScanner.findGames(new PathResolver().findAllLibraryDirectories()));
-		for (Long gameId : availableGameIds) {
-			availableTags.addAll(scraper.loadExternalTags(gameId, taggerOptions.isAddCategories(), taggerOptions.isAddGenres(), taggerOptions.isAddUserTags()));
-		}
+		SetMultimap<Long, String> load=tagLoader.load(availableGameIds, taggerOptions.getTagTypes());
+		availableTags.addAll(load.values());
 		return availableTags;
 	}
 
 	public VdfRoot tag(Path path, TaggerOptions taggerOptions) throws IOException, RecognitionException {
 		SharedConfig sharedConfig=new SharedConfig(path);
-		Set<Long> existingGameIds=new HashSet<>();
+		Set<Long> availableGameIds=new HashSet<>();
+		SetMultimap<Long, String> gameTags=HashMultimap.create();
+
 		for (Map.Entry<Long, VdfNode> entry : sharedConfig.getGameNodeMap().entrySet()) {
-			//System.err.println(gameNode.getName());
 			try {
 				final long gameId=entry.getKey();
-				existingGameIds.add(gameId);
-				addTags(sharedConfig, gameId, taggerOptions);
+				availableGameIds.add(gameId);
 			} catch (Exception e) {
+				LOG.log(Level.WARNING, "failed to load gameId", e);
 			}
 
 		}
+
 		// vdf doesn't contain all games, add the rest (at least the installed games)
 		PathResolver pathResolver=new PathResolver();
-		Set<Long> availableGameIds=LibraryScanner.findGames(pathResolver.findAllLibraryDirectories());
-		availableGameIds.removeAll(existingGameIds);
+		availableGameIds.addAll(LibraryScanner.findGames(pathResolver.findAllLibraryDirectories()));
+		SetMultimap<Long, String> availableTags=tagLoader.load(availableGameIds, taggerOptions.getTagTypes());
+		
 		for (Long gameId : availableGameIds) {
-			try {
-				addTags(sharedConfig, gameId, taggerOptions);
-			} catch (Exception e) {
-			}
+			addTags(sharedConfig, gameId, taggerOptions, availableTags.get(gameId));
 		}
 		return sharedConfig.getRootNode();
 	}
 
-	private void addTags(SharedConfig sharedConfig, Long gameId, TaggerOptions taggerOptions) throws IOException {
+	private void addTags(SharedConfig sharedConfig, Long gameId, TaggerOptions taggerOptions, Set<String> externalTags) {
 		Set<String> existingTags=sharedConfig.getTags(gameId);
 
-		Set<String> externalTags=scraper.loadExternalTags(gameId, taggerOptions.isAddCategories(), taggerOptions.isAddGenres(), taggerOptions.isAddUserTags());
 		if (null!=taggerOptions.getWhiteList()&&!taggerOptions.getWhiteList().isEmpty()) {
 			externalTags.retainAll(taggerOptions.getWhiteList());
 		}
@@ -311,7 +306,6 @@ public class Tagger {
 			}
 		}
 		sharedConfig.setTags(gameId, existingTags);
-
 	}
 
 }
