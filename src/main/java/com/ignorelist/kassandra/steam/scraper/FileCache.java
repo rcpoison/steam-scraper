@@ -84,7 +84,6 @@ public class FileCache extends AbstractLoadingCache<String, InputStream> {
 		try {
 			return (System.currentTimeMillis()-getModified(key))>=expireAfterMillis;
 		} catch (IOException ex) {
-			System.err.println(ex);
 			return true;
 		}
 	}
