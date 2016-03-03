@@ -136,7 +136,6 @@ public class FileCache extends AbstractLoadingCache<String, InputStream> {
 	}
 
 	private void putNonBlocking(String key, InputStream value) throws IOException {
-		System.err.println("put: "+key);
 		final Path cacheFile=buildCacheFile(key);
 		OutputStream outputStream=new GZIPOutputStream(Files.newOutputStream(cacheFile));
 		try {
