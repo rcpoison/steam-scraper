@@ -34,7 +34,7 @@ public class HtmlTagLoader implements TagLoader {
 			@Override
 			public InputStream load(String k) throws Exception {
 				URL url=new URL(buildPageUrl(k));
-				return openInputStream(url);
+				return URLUtil.openInputStream(url);
 			}
 		}, TimeUnit.DAYS, 7);
 	}
@@ -47,14 +47,6 @@ public class HtmlTagLoader implements TagLoader {
 		return buildPageUrl(k.toString());
 	}
 
-	private static InputStream openInputStream(URL url) throws IOException {
-		URLConnection uRLConnection=url.openConnection();
-		uRLConnection.setRequestProperty("User-Agent", "Valve/Steam HTTP Client 1.0 (tenfoot)");
-		uRLConnection.setRequestProperty("Cookie", "birthtime=-3599; lastagecheckage=1-January-1970");
-		uRLConnection.setConnectTimeout(8000);
-		uRLConnection.setReadTimeout(8000);
-		return uRLConnection.getInputStream();
-	}
 
 	@Override
 	public Set<String> load(Long gameId, EnumSet<TagType> types) {
