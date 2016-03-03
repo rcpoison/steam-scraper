@@ -51,7 +51,11 @@ public class BatchTagLoader implements TagLoader {
 			futureResults.put(gameId, executorService.submit(new Callable<Set<String>>() {
 				@Override
 				public Set<String> call() throws Exception {
-					return load(gameId, types);
+					long start=System.currentTimeMillis();
+					Set<String> loaded=load(gameId, types);
+					long end=System.currentTimeMillis();
+					//System.err.println("loaded "+gameId+" in "+(end-start)+"ms");
+					return loaded;
 				}
 			}));
 		}
