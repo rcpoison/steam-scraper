@@ -11,7 +11,6 @@ import com.google.common.cache.CacheLoader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.net.URLConnection;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -20,6 +19,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -47,25 +47,28 @@ public class HtmlTagLoader implements TagLoader {
 		return buildPageUrl(k.toString());
 	}
 
-
 	@Override
 	public Set<String> load(Long gameId, EnumSet<TagType> types) {
 		try {
 			Set<String> tags=new HashSet<>();
 			if (!types.isEmpty()) {
 				InputStream inputStream=cache.get(gameId.toString());
-				Document document=Jsoup.parse(inputStream, Charsets.UTF_8.name(), buildPageUrl(gameId));
-				if (types.contains(TagType.CATEGORY)) {
-					Elements categories=document.select("div#category_block a.name");
-					copyText(categories, tags);
-				}
-				if (types.contains(TagType.GENRE)) {
-					Elements genres=document.select("div.details_block a[href*=/genre/]");
-					copyText(genres, tags);
-				}
-				if (types.contains(TagType.USER)) {
-					Elements userTags=document.select("a.app_tag");
-					copyText(userTags, tags);
+				try {
+					Document document=Jsoup.parse(inputStream, Charsets.UTF_8.name(), buildPageUrl(gameId));
+					if (types.contains(TagType.CATEGORY)) {
+						Elements categories=document.select("div#category_block a.name");
+						copyText(categories, tags);
+					}
+					if (types.contains(TagType.GENRE)) {
+						Elements genres=document.select("div.details_block a[href*=/genre/]");
+						copyText(genres, tags);
+					}
+					if (types.contains(TagType.USER)) {
+						Elements userTags=document.select("a.app_tag");
+						copyText(userTags, tags);
+					}
+				} finally {
+					IOUtils.closeQuietly(inputStream);
 				}
 			}
 			return tags;
