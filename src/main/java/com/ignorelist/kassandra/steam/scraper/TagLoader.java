@@ -6,7 +6,6 @@
 package com.ignorelist.kassandra.steam.scraper;
 
 import java.util.EnumSet;
-import java.util.Set;
 
 /**
  *
@@ -14,5 +13,6 @@ import java.util.Set;
  */
 public interface TagLoader {
 
-	Set<String> load(Long gameId, EnumSet<TagType> types);
+	GameInfo load(Long gameId, EnumSet<TagType> types);
+
 }

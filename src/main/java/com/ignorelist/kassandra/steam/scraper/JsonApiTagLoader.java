@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.cache.CacheLoader;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.RateLimiter;
 import com.ignorelist.kassandra.steam.scraper.model.Category;
@@ -24,8 +23,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -89,14 +86,15 @@ public class JsonApiTagLoader implements TagLoader {
 	}
 
 	@Override
-	public Set<String> load(Long gameId, EnumSet<TagType> types) {
+	public GameInfo load(Long gameId, EnumSet<TagType> types) {
+		GameInfo gameInfo=new GameInfo();
+		gameInfo.setId(gameId);
 		try {
 			InputStream inputStream=cache.get(gameId.toString());
 			try {
 				final Data gameData=loadAppData(inputStream);
-				Set<String> externalTags=new HashSet<>();
 				if (types.contains(TagType.CATEGORY)) {
-					Iterables.addAll(externalTags, Iterables.transform(gameData.getCategories(), new Function<Category, String>() {
+					Iterables.addAll(gameInfo.getTags().get(TagType.CATEGORY), Iterables.transform(gameData.getCategories(), new Function<Category, String>() {
 						@Override
 						public String apply(Category input) {
 							return input.getDescription();
@@ -104,14 +102,13 @@ public class JsonApiTagLoader implements TagLoader {
 					}));
 				}
 				if (types.contains(TagType.GENRE)) {
-					Iterables.addAll(externalTags, Iterables.transform(gameData.getGenres(), new Function<Genre, String>() {
+					Iterables.addAll(gameInfo.getTags().get(TagType.GENRE), Iterables.transform(gameData.getGenres(), new Function<Genre, String>() {
 						@Override
 						public String apply(Genre input) {
 							return input.getDescription();
 						}
 					}));
 				}
-				return externalTags;
 			} catch (IOException ex) {
 				Logger.getLogger(JsonApiTagLoader.class.getName()).log(Level.SEVERE, null, ex);
 			} finally {
@@ -120,7 +117,7 @@ public class JsonApiTagLoader implements TagLoader {
 		} catch (ExecutionException ex) {
 			Logger.getLogger(JsonApiTagLoader.class.getName()).log(Level.SEVERE, null, ex);
 		}
-		return new HashSet<>();
+		return gameInfo;
 	}
 
 }

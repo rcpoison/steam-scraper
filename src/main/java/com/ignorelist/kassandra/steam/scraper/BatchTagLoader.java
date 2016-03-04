@@ -5,21 +5,14 @@
  */
 package com.ignorelist.kassandra.steam.scraper;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.SetMultimap;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -40,38 +33,27 @@ public class BatchTagLoader implements TagLoader {
 	}
 
 	@Override
-	public Set<String> load(Long gameId, EnumSet<TagType> types) {
+	public GameInfo load(Long gameId, EnumSet<TagType> types) {
 		return tagLoader.load(gameId, types);
 	}
 
-	public SetMultimap<Long, String> load(Iterable<Long> gameIds, final EnumSet<TagType> types) {
+	public Map<Long, GameInfo> load(Iterable<Long> gameIds, final EnumSet<TagType> types) {
 		ExecutorService executorService=Executors.newFixedThreadPool(nThreads);
-		Map<Long, Future<Set<String>>> futureResults=new HashMap<>();
+		final ConcurrentMap<Long, GameInfo> results=new ConcurrentHashMap<>();
 		for (final Long gameId : gameIds) {
-			futureResults.put(gameId, executorService.submit(new Callable<Set<String>>() {
+			executorService.submit(new Runnable() {
 				@Override
-				public Set<String> call() throws Exception {
+				public void run() {
 					long start=System.currentTimeMillis();
-					Set<String> loaded=load(gameId, types);
+					GameInfo loaded=load(gameId, types);
 					long end=System.currentTimeMillis();
 					//System.err.println("loaded "+gameId+" in "+(end-start)+"ms");
-					return loaded;
+					results.put(gameId, loaded);
 				}
-			}));
+			});
 		}
-		SetMultimap<Long, String> results=HashMultimap.create();
-		for (Map.Entry<Long, Future<Set<String>>> entry : futureResults.entrySet()) {
-			final Long key=entry.getKey();
-			final Future<Set<String>> value=entry.getValue();
-			try {
-				results.putAll(key, value.get());
-			} catch (InterruptedException ex) {
-				Logger.getLogger(BatchTagLoader.class.getName()).log(Level.SEVERE, null, ex);
-			} catch (ExecutionException ex) {
-				Logger.getLogger(BatchTagLoader.class.getName()).log(Level.SEVERE, null, ex);
-			}
-		}
-		MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.MINUTES);
+
+		MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.DAYS);
 		return results;
 	}
 }

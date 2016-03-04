@@ -8,9 +8,11 @@ package com.ignorelist.kassandra.steam.scraper;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  *
@@ -62,8 +64,8 @@ public class GameInfo implements Iterable<String>, Serializable {
 		getTags().putAll(tagType, tagValues);
 	}
 
-	public Iterable<String> getAllTags() {
-		return getTags().values();
+	public Set<String> getAllTags() {
+		return Sets.newHashSet(this);
 	}
 
 	@Override

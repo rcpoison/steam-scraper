@@ -13,7 +13,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -48,36 +47,37 @@ public class HtmlTagLoader implements TagLoader {
 	}
 
 	@Override
-	public Set<String> load(Long gameId, EnumSet<TagType> types) {
+	public GameInfo load(Long gameId, EnumSet<TagType> types) {
+		GameInfo gameInfo=new GameInfo();
+		gameInfo.setId(gameId);
 		try {
-			Set<String> tags=new HashSet<>();
 			if (!types.isEmpty()) {
 				InputStream inputStream=cache.get(gameId.toString());
 				try {
 					Document document=Jsoup.parse(inputStream, Charsets.UTF_8.name(), buildPageUrl(gameId));
 					if (types.contains(TagType.CATEGORY)) {
 						Elements categories=document.select("div#category_block a.name");
-						copyText(categories, tags);
+						copyText(categories, gameInfo.getTags().get(TagType.CATEGORY));
 					}
 					if (types.contains(TagType.GENRE)) {
 						Elements genres=document.select("div.details_block a[href*=/genre/]");
-						copyText(genres, tags);
+						copyText(genres, gameInfo.getTags().get(TagType.GENRE));
 					}
 					if (types.contains(TagType.USER)) {
 						Elements userTags=document.select("a.app_tag");
-						copyText(userTags, tags);
+						copyText(userTags, gameInfo.getTags().get(TagType.USER));
 					}
 				} finally {
 					IOUtils.closeQuietly(inputStream);
 				}
 			}
-			return tags;
 		} catch (ExecutionException ex) {
 			Logger.getLogger(HtmlTagLoader.class.getName()).log(Level.SEVERE, null, ex);
 		} catch (IOException ex) {
 			Logger.getLogger(HtmlTagLoader.class.getName()).log(Level.SEVERE, null, ex);
 		}
-		return new HashSet<>();
+
+		return gameInfo;
 	}
 
 	private static void copyText(Elements elements, Set<String> target) {

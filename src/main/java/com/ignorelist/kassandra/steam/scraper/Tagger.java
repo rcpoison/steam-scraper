@@ -254,8 +254,8 @@ public class Tagger {
 			}
 		}
 		availableGameIds.addAll(LibraryScanner.findGames(new PathResolver().findAllLibraryDirectories()));
-		SetMultimap<Long, String> load=tagLoader.load(availableGameIds, taggerOptions.getTagTypes());
-		availableTags.addAll(load.values());
+		Map<Long, GameInfo> load=tagLoader.load(availableGameIds, taggerOptions.getTagTypes());
+		Iterables.addAll(availableTags, GameInfo.getAllTags(load.values()));
 		return availableTags;
 	}
 
@@ -277,10 +277,10 @@ public class Tagger {
 		// vdf doesn't contain all games, add the rest (at least the installed games)
 		PathResolver pathResolver=new PathResolver();
 		availableGameIds.addAll(LibraryScanner.findGames(pathResolver.findAllLibraryDirectories()));
-		SetMultimap<Long, String> availableTags=tagLoader.load(availableGameIds, taggerOptions.getTagTypes());
-		
+		Map<Long, GameInfo> availableTags=tagLoader.load(availableGameIds, taggerOptions.getTagTypes());
+
 		for (Long gameId : availableGameIds) {
-			addTags(sharedConfig, gameId, taggerOptions, availableTags.get(gameId));
+			addTags(sharedConfig, gameId, taggerOptions, availableTags.get(gameId).getAllTags());
 		}
 		return sharedConfig.getRootNode();
 	}
