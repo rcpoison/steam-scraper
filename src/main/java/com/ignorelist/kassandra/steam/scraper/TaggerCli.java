@@ -73,7 +73,7 @@ public class TaggerCli {
 			System.err.println("multiple sharedconfig.vdf available:\n"+Joiner.on("\n").join(sharedConfigPaths)+"\n, can not write to stdout. Need to specify -w or -f with a single sharedconfig.vdf");
 			System.exit(1);
 		}
-		Tagger.TaggerOptions taggerOptions=new Tagger.TaggerOptions();
+		Tagger.Options taggerOptions=new Tagger.Options();
 		final String[] removeTagsValues=commandLine.getOptionValues("remove");
 		if (null!=removeTagsValues) {
 			taggerOptions.setRemoveTags(Sets.newHashSet(removeTagsValues));

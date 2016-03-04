@@ -27,7 +27,7 @@ import org.antlr.runtime.RecognitionException;
  */
 public class Tagger {
 
-	public static class TaggerOptions {
+	public static class Options {
 
 		private EnumSet<TagType> tagTypes;
 		private Set<String> removeTags;
@@ -89,7 +89,7 @@ public class Tagger {
 		this.tagLoader=tagLoader;
 	}
 
-	public Set<String> getAvailableTags(Set<Path> sharedConfigPaths, TaggerOptions taggerOptions) throws IOException, RecognitionException {
+	public Set<String> getAvailableTags(Set<Path> sharedConfigPaths, Options taggerOptions) throws IOException, RecognitionException {
 		Set<String> availableTags=new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 		Set<Long> availableGameIds=new HashSet<>();
 		for (Path path : sharedConfigPaths) {
@@ -105,7 +105,7 @@ public class Tagger {
 		return availableTags;
 	}
 
-	public VdfRoot tag(Path path, TaggerOptions taggerOptions) throws IOException, RecognitionException {
+	public VdfRoot tag(Path path, Options taggerOptions) throws IOException, RecognitionException {
 		SharedConfig sharedConfig=new SharedConfig(path);
 		Set<Long> availableGameIds=new HashSet<>();
 		SetMultimap<Long, String> gameTags=HashMultimap.create();
@@ -131,7 +131,7 @@ public class Tagger {
 		return sharedConfig.getRootNode();
 	}
 
-	private void addTags(SharedConfig sharedConfig, Long gameId, TaggerOptions taggerOptions, Set<String> externalTags) {
+	private void addTags(SharedConfig sharedConfig, Long gameId, Options taggerOptions, Set<String> externalTags) {
 		Set<String> existingTags=sharedConfig.getTags(gameId);
 
 		if (null!=taggerOptions.getWhiteList()&&!taggerOptions.getWhiteList().isEmpty()) {
