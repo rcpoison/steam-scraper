@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  *
@@ -38,22 +39,31 @@ public class BatchTagLoader implements TagLoader {
 	}
 
 	public Map<Long, GameInfo> load(Iterable<Long> gameIds, final EnumSet<TagType> types) {
+		long wallTimeStart=System.currentTimeMillis();
 		ExecutorService executorService=Executors.newFixedThreadPool(nThreads);
 		final ConcurrentMap<Long, GameInfo> results=new ConcurrentHashMap<>();
+		final AtomicLong time=new AtomicLong();
+		int gameCount=0;
 		for (final Long gameId : gameIds) {
 			executorService.submit(new Runnable() {
 				@Override
 				public void run() {
 					long start=System.currentTimeMillis();
 					GameInfo loaded=load(gameId, types);
+					results.put(gameId, loaded);
 					long end=System.currentTimeMillis();
 					//System.err.println("loaded "+gameId+" in "+(end-start)+"ms");
-					results.put(gameId, loaded);
+					time.addAndGet(end-start);
 				}
 			});
+			++gameCount;
 		}
 
 		MoreExecutors.shutdownAndAwaitTermination(executorService, 1, TimeUnit.DAYS);
+		long wallTimeEnd=System.currentTimeMillis();
+		System.err.println("finished loading "+gameCount+" games");
+		System.err.println("time: "+time.longValue()+"ms");
+		System.err.println("wallTime: "+(wallTimeEnd-wallTimeStart)+"ms");
 		return results;
 	}
 }
