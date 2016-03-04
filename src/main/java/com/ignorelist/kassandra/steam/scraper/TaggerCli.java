@@ -45,6 +45,9 @@ public class TaggerCli {
 
 	/**
 	 * @param args the command line arguments
+	 * @throws java.io.IOException
+	 * @throws org.antlr.runtime.RecognitionException
+	 * @throws org.apache.commons.cli.ParseException
 	 */
 	public static void main(String[] args) throws IOException, RecognitionException, ParseException {
 		Options options=buildOptions();
