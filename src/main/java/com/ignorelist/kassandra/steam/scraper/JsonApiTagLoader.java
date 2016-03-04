@@ -93,6 +93,7 @@ public class JsonApiTagLoader implements TagLoader {
 			InputStream inputStream=cache.get(gameId.toString());
 			try {
 				final Data gameData=loadAppData(inputStream);
+				gameInfo.setName(gameData.getName());
 				if (types.contains(TagType.CATEGORY)) {
 					Iterables.addAll(gameInfo.getTags().get(TagType.CATEGORY), Iterables.transform(gameData.getCategories(), new Function<Category, String>() {
 						@Override
