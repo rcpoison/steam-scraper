@@ -8,6 +8,7 @@ package com.ignorelist.kassandra.steam.scraper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.cache.CacheLoader;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -55,6 +56,12 @@ public class HtmlTagLoader implements TagLoader {
 				InputStream inputStream=cache.get(gameId.toString());
 				try {
 					Document document=Jsoup.parse(inputStream, Charsets.UTF_8.name(), buildPageUrl(gameId));
+
+					Elements appName=document.select("div.apphub_AppName");
+					Element nameElement=Iterables.getFirst(appName, null);
+					if (null!=nameElement&&null!=nameElement.text()) {
+						gameInfo.setName(nameElement.text().trim());
+					}
 					if (types.contains(TagType.CATEGORY)) {
 						Elements categories=document.select("div#category_block a.name");
 						copyText(categories, gameInfo.getTags().get(TagType.CATEGORY));
