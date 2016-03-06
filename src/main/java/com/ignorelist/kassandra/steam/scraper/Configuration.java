@@ -15,7 +15,6 @@ import com.google.common.collect.Sets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
@@ -64,6 +63,12 @@ public class Configuration {
 		}
 	};
 	private static final Pattern PROPERTIES_VALUE_SEPERATOR=Pattern.compile("[,:\\s]+");
+
+	private static final String CONFIG_DOWNLOAD_THREADS="downloadThreads";
+	private static final String CONFIG_REPLACEMENTS="replacements";
+	private static final String CONFIG_WHITE_LIST="whiteList";
+	private static final String CONFIG_TAG_TYPES="tagTypes";
+	private static final String CONFIG_SHARED_CONFIG_PATHS="sharedConfigPaths";
 
 	private Set<Path> sharedConfigPaths;
 	private Set<TagType> tagTypes;
@@ -114,26 +119,26 @@ public class Configuration {
 	public Properties toProperties() {
 		Properties properties=new Properties();
 		if (null!=sharedConfigPaths) {
-			properties.setProperty("sharedConfigPaths", Joiner.on(':').join(Iterables.transform(sharedConfigPaths, PATH_TO_STRING)));
+			properties.setProperty(CONFIG_SHARED_CONFIG_PATHS, Joiner.on(':').join(Iterables.transform(sharedConfigPaths, PATH_TO_STRING)));
 		}
 		if (null!=tagTypes) {
-			properties.setProperty("tagTypes", Joiner.on(',').join(tagTypes));
+			properties.setProperty(CONFIG_TAG_TYPES, Joiner.on(',').join(tagTypes));
 		}
 		if (null!=whiteList) {
-			properties.setProperty("whiteList", PATH_TO_STRING.apply(whiteList));
+			properties.setProperty(CONFIG_WHITE_LIST, PATH_TO_STRING.apply(whiteList));
 		}
 		if (null!=replacements) {
-			properties.setProperty("replacements", PATH_TO_STRING.apply(replacements));
+			properties.setProperty(CONFIG_REPLACEMENTS, PATH_TO_STRING.apply(replacements));
 		}
 		if (null!=downloadThreads) {
-			properties.setProperty("downloadThreads", downloadThreads.toString());
+			properties.setProperty(CONFIG_DOWNLOAD_THREADS, downloadThreads.toString());
 		}
 		return properties;
 	}
 
 	public static Configuration fromProperties(Properties properties) {
 		Configuration configuration=new Configuration();
-		String sharedConfigPaths=properties.getProperty("sharedConfigPaths");
+		String sharedConfigPaths=properties.getProperty(CONFIG_SHARED_CONFIG_PATHS);
 		if (null!=sharedConfigPaths) {
 			Set<Path> paths=Sets.newHashSet(
 					Iterables.filter(
@@ -141,17 +146,17 @@ public class Configuration {
 							Predicates.notNull()));
 			configuration.setSharedConfigPaths(paths);
 		}
-		String tagTypes=properties.getProperty("tagTypes");
+		String tagTypes=properties.getProperty(CONFIG_TAG_TYPES);
 		if (null!=tagTypes) {
 			Set<TagType> tags=Sets.newHashSet(
 					Iterables.filter(
-							Iterables.transform(Splitter.on(PROPERTIES_VALUE_SEPERATOR).split(tagTypes), STRING_TO_TAG_TYPE), 
+							Iterables.transform(Splitter.on(PROPERTIES_VALUE_SEPERATOR).split(tagTypes), STRING_TO_TAG_TYPE),
 							Predicates.notNull()));
 			configuration.setTagTypes(tags);
 		}
-		configuration.setWhiteList(STRING_TO_PATH.apply(properties.getProperty("sharedConfigPaths")));
-		configuration.setReplacements(STRING_TO_PATH.apply(properties.getProperty("replacements")));
-		String downloadThreads=properties.getProperty("downloadThreads");
+		configuration.setWhiteList(STRING_TO_PATH.apply(properties.getProperty(CONFIG_WHITE_LIST)));
+		configuration.setReplacements(STRING_TO_PATH.apply(properties.getProperty(CONFIG_REPLACEMENTS)));
+		String downloadThreads=properties.getProperty(CONFIG_DOWNLOAD_THREADS);
 		if (null!=downloadThreads) {
 			try {
 				configuration.setDownloadThreads(Integer.valueOf(downloadThreads));
