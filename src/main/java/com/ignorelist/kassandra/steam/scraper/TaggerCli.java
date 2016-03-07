@@ -50,7 +50,15 @@ public class TaggerCli {
 		}
 		final PathResolver pathResolver=new PathResolver();
 
-		Configuration configuration=toConfiguration(commandLine);
+		Configuration configuration;
+		Path configurationPath=pathResolver.findConfiguration();
+		if (Files.isRegularFile(configurationPath)) {
+			configuration=Configuration.fromPropertiesFile(configurationPath);
+		} else {
+			configuration=new Configuration();
+		}
+		configuration=toConfiguration(configuration, commandLine);
+		configuration.toProperties().store(System.err, null);
 
 		Set<Path> sharedConfigPaths=configuration.getSharedConfigPaths();
 		if (sharedConfigPaths.size()>1&&!commandLine.hasOption("w")) {
@@ -73,13 +81,12 @@ public class TaggerCli {
 			System.err.println("no tag types!");
 			System.exit(1);
 		}
-		
+
 		final boolean printTags=commandLine.hasOption("p");
-		
-		
+
 		final BatchTagLoader tagLoader=new BatchTagLoader(new HtmlTagLoader(pathResolver.findCachePath("html")));
 		Tagger tagger=new Tagger(tagLoader);
-		
+
 		if (printTags) {
 			Set<String> availableTags=tagger.getAvailableTags(sharedConfigPaths, taggerOptions);
 			Joiner.on("\n").appendTo(System.out, availableTags);
@@ -100,11 +107,9 @@ public class TaggerCli {
 		}
 	}
 
-	private static Configuration toConfiguration(CommandLine commandLine) throws IOException {
-		Configuration configuration=new Configuration();
-		final PathResolver pathResolver=new PathResolver();
-		Set<Path> sharedConfigPaths=new LinkedHashSet<>();
+	private static Configuration toConfiguration(Configuration configuration, CommandLine commandLine) throws IOException {
 		if (commandLine.hasOption("f")) {
+			Set<Path> sharedConfigPaths=new LinkedHashSet<>();
 			String[] passedPaths=commandLine.getOptionValues("f");
 			if (0==passedPaths.length) {
 				throw new IllegalArgumentException("no paths passed in -f");
@@ -112,33 +117,42 @@ public class TaggerCli {
 			for (String p : passedPaths) {
 				sharedConfigPaths.add(Paths.get(p));
 			}
-		} else {
-			sharedConfigPaths=pathResolver.findSharedConfig();
+			configuration.setSharedConfigPaths(sharedConfigPaths);
+			
+		} else if (null==configuration.getSharedConfigPaths()||configuration.getSharedConfigPaths().isEmpty()) {
+			configuration.setSharedConfigPaths(new PathResolver().findSharedConfig());
 		}
-		configuration.setSharedConfigPaths(sharedConfigPaths);
 
 		if (commandLine.hasOption("R")) {
 			Path replacementFile=Paths.get(commandLine.getOptionValue("R"));
 			configuration.setReplacements(replacementFile);
 		}
+
 		if (commandLine.hasOption("i")) {
 			Path whiteListFile=Paths.get(commandLine.getOptionValue("i"));
 			configuration.setWhiteList(whiteListFile);
 		}
-		Set<TagType> tagTypes=new HashSet<>();
-		final boolean addCategories=!commandLine.hasOption("c");
-		if (addCategories) {
-			tagTypes.add(TagType.CATEGORY);
+
+		if (commandLine.hasOption("c")||commandLine.hasOption("g")||commandLine.hasOption("u")) {
+			Set<TagType> tagTypes=new HashSet<>();
+			final boolean addCategories=!commandLine.hasOption("c");
+			if (addCategories) {
+				tagTypes.add(TagType.CATEGORY);
+			}
+			final boolean addGenres=!commandLine.hasOption("g");
+			if (addGenres) {
+				tagTypes.add(TagType.GENRE);
+			}
+			final boolean addUserTags=commandLine.hasOption("u");
+			if (addUserTags) {
+				tagTypes.add(TagType.USER);
+			}
+			configuration.setTagTypes(tagTypes);
+			
+		} else if (null==configuration.getTagTypes()||configuration.getTagTypes().isEmpty()) {
+			configuration.setTagTypes(Sets.newHashSet(TagType.CATEGORY, TagType.GENRE));
 		}
-		final boolean addGenres=!commandLine.hasOption("g");
-		if (addGenres) {
-			tagTypes.add(TagType.GENRE);
-		}
-		final boolean addUserTags=commandLine.hasOption("u");
-		if (addUserTags) {
-			tagTypes.add(TagType.USER);
-		}
-		configuration.setTagTypes(tagTypes);
+
 		return configuration;
 	}
 
