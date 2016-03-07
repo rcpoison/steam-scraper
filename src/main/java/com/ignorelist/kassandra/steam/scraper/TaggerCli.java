@@ -7,6 +7,7 @@ package com.ignorelist.kassandra.steam.scraper;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
+import com.google.common.eventbus.Subscribe;
 import com.technofovea.hl2parse.vdf.VdfNode;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -33,6 +34,14 @@ import org.apache.commons.cli.ParseException;
  * @author poison
  */
 public class TaggerCli {
+
+	private static class CliEventLoggerLoaded {
+
+		@Subscribe
+		public void logLoadedEvent(BatchTagLoader.GameInfoLoadedEvent event) {
+			System.err.println(event.getGameInfo().getId()+" ("+event.getGameInfo().getName()+") loaded in "+event.getDurationMillis()+"ms");
+		}
+	}
 
 	/**
 	 * @param args the command line arguments
@@ -88,6 +97,9 @@ public class TaggerCli {
 		final boolean printTags=commandLine.hasOption("p");
 
 		final BatchTagLoader tagLoader=new BatchTagLoader(new HtmlTagLoader(pathResolver.findCachePath("html")));
+		if (commandLine.hasOption("v")) {
+			tagLoader.registerEventListener(new CliEventLoggerLoaded());
+		}
 		Tagger tagger=new Tagger(tagLoader);
 
 		if (printTags) {
@@ -175,6 +187,7 @@ public class TaggerCli {
 		options.addOption(Option.builder("i").hasArg().argName("file").desc("whitelist for tags to include (one tag per line)").build());
 		options.addOption("I", false, "remove all existing tags not in specified whitelist");
 		options.addOption(Option.builder("R").hasArg().argName("file").desc("file containing replacements (one replacement per line, in the format original=replacement)").build());
+		options.addOption("v", false, "verbose output");
 		return options;
 	}
 
