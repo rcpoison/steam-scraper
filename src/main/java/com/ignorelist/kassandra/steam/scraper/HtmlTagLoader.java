@@ -11,6 +11,8 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.EnumSet;
@@ -61,6 +63,15 @@ public class HtmlTagLoader implements TagLoader {
 					Element nameElement=Iterables.getFirst(appName, null);
 					if (null!=nameElement&&null!=nameElement.text()) {
 						gameInfo.setName(nameElement.text().trim());
+					}
+					Elements appIcon=document.select("div.apphub_AppIcon img");
+					Element iconElement=Iterables.getFirst(appIcon, null);
+					if (null!=iconElement&&null!=iconElement.attr("src")) {
+						try {
+							gameInfo.setIcon(new URI(iconElement.attr("src")));
+						} catch (URISyntaxException ex) {
+							Logger.getLogger(HtmlTagLoader.class.getName()).log(Level.SEVERE, null, ex);
+						}
 					}
 					if (types.contains(TagType.CATEGORY)) {
 						Elements categories=document.select("div#category_block a.name");

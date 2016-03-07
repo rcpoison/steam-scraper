@@ -10,6 +10,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import java.io.Serializable;
+import java.net.URI;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
@@ -24,6 +25,7 @@ public class GameInfo implements Iterable<String>, Serializable {
 
 	private Long id;
 	private String name;
+	private URI icon;
 	private SetMultimap<TagType, String> tags;
 
 	public GameInfo() {
@@ -47,6 +49,14 @@ public class GameInfo implements Iterable<String>, Serializable {
 
 	public void setName(String name) {
 		this.name=name;
+	}
+
+	public URI getIcon() {
+		return icon;
+	}
+
+	public void setIcon(URI icon) {
+		this.icon=icon;
 	}
 
 	public SetMultimap<TagType, String> getTags() {
