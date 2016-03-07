@@ -15,6 +15,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -139,6 +140,15 @@ public class Configuration {
 
 	public void setDownloadThreads(Integer downloadThreads) {
 		this.downloadThreads=downloadThreads;
+	}
+
+	public void writeProperties(Path file) throws IOException {
+		Writer propertiesWriter=Files.newBufferedWriter(file, Charsets.UTF_8);
+		try {
+			toProperties().store(propertiesWriter, null);
+		} finally {
+			IOUtils.closeQuietly(propertiesWriter);
+		}
 	}
 
 	public Properties toProperties() {
