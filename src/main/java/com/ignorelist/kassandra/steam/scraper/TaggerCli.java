@@ -49,8 +49,6 @@ public class TaggerCli {
 			System.exit(0);
 		}
 		final PathResolver pathResolver=new PathResolver();
-		final BatchTagLoader tagLoader=new BatchTagLoader(new HtmlTagLoader(pathResolver.findCachePath("html")));
-		Tagger tagger=new Tagger(tagLoader);
 
 		Configuration configuration=toConfiguration(commandLine);
 
@@ -77,6 +75,11 @@ public class TaggerCli {
 		}
 		
 		final boolean printTags=commandLine.hasOption("p");
+		
+		
+		final BatchTagLoader tagLoader=new BatchTagLoader(new HtmlTagLoader(pathResolver.findCachePath("html")));
+		Tagger tagger=new Tagger(tagLoader);
+		
 		if (printTags) {
 			Set<String> availableTags=tagger.getAvailableTags(sharedConfigPaths, taggerOptions);
 			Joiner.on("\n").appendTo(System.out, availableTags);
