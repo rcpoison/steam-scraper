@@ -26,6 +26,7 @@ public class GameInfo implements Iterable<String>, Serializable {
 	private Long id;
 	private String name;
 	private URI icon;
+	private URI headerImage;
 	private SetMultimap<TagType, String> tags;
 
 	public GameInfo() {
@@ -57,6 +58,14 @@ public class GameInfo implements Iterable<String>, Serializable {
 
 	public void setIcon(URI icon) {
 		this.icon=icon;
+	}
+
+	public URI getHeaderImage() {
+		return headerImage;
+	}
+
+	public void setHeaderImage(URI headerImage) {
+		this.headerImage=headerImage;
 	}
 
 	public SetMultimap<TagType, String> getTags() {

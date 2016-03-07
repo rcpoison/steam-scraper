@@ -73,6 +73,15 @@ public class HtmlTagLoader implements TagLoader {
 							Logger.getLogger(HtmlTagLoader.class.getName()).log(Level.SEVERE, null, ex);
 						}
 					}
+					Elements headerImage=document.select("img.game_header_image_full");
+					Element headerImageElement=Iterables.getFirst(headerImage, null);
+					if (null!=headerImageElement&&null!=headerImageElement.attr("src")) {
+						try {
+							gameInfo.setHeaderImage(new URI(headerImageElement.attr("src")));
+						} catch (URISyntaxException ex) {
+							Logger.getLogger(HtmlTagLoader.class.getName()).log(Level.SEVERE, null, ex);
+						}
+					}
 					if (types.contains(TagType.CATEGORY)) {
 						Elements categories=document.select("div#category_block a.name");
 						copyText(categories, gameInfo.getTags().get(TagType.CATEGORY));
