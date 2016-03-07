@@ -51,14 +51,20 @@ public class TaggerCli {
 		final PathResolver pathResolver=new PathResolver();
 
 		Configuration configuration;
-		Path configurationPath=pathResolver.findConfiguration();
-		if (Files.isRegularFile(configurationPath)) {
-			configuration=Configuration.fromPropertiesFile(configurationPath);
+		Path configurationFile=pathResolver.findConfiguration();
+		if (Files.isRegularFile(configurationFile)) {
+			configuration=Configuration.fromPropertiesFile(configurationFile);
 		} else {
 			configuration=new Configuration();
 		}
 		configuration=toConfiguration(configuration, commandLine);
-		configuration.toProperties().store(System.err, null);
+		//configuration.toProperties().store(System.err, null);
+
+		if (!Files.isRegularFile(configurationFile)) {
+			configuration.writeProperties(configurationFile);
+			System.err.println("no configuration file present, write based on CLI options: "+configurationFile.toString());
+			configuration.toProperties().store(System.err, null);
+		}
 
 		Set<Path> sharedConfigPaths=configuration.getSharedConfigPaths();
 		if (sharedConfigPaths.size()>1&&!commandLine.hasOption("w")) {
