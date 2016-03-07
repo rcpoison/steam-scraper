@@ -73,9 +73,6 @@ public class TaggerCli {
 			taggerOptions.setRemoveTags(Sets.newHashSet(removeTagsValues));
 		}
 
-		final boolean removeNotWhiteListed=commandLine.hasOption("I");
-		taggerOptions.setRemoveNotWhiteListed(removeNotWhiteListed);
-
 		Set<TagType> tagTypes=configuration.getTagTypes();
 		if (null==tagTypes) {
 			System.err.println("no tag types!");
@@ -118,7 +115,7 @@ public class TaggerCli {
 				sharedConfigPaths.add(Paths.get(p));
 			}
 			configuration.setSharedConfigPaths(sharedConfigPaths);
-			
+
 		} else if (null==configuration.getSharedConfigPaths()||configuration.getSharedConfigPaths().isEmpty()) {
 			configuration.setSharedConfigPaths(new PathResolver().findSharedConfig());
 		}
@@ -132,6 +129,9 @@ public class TaggerCli {
 			Path whiteListFile=Paths.get(commandLine.getOptionValue("i"));
 			configuration.setWhiteList(whiteListFile);
 		}
+
+		final boolean removeNotWhiteListed=commandLine.hasOption("I");
+		configuration.setRemoveNotWhiteListed(removeNotWhiteListed);
 
 		if (commandLine.hasOption("c")||commandLine.hasOption("g")||commandLine.hasOption("u")) {
 			Set<TagType> tagTypes=new HashSet<>();
@@ -148,7 +148,7 @@ public class TaggerCli {
 				tagTypes.add(TagType.USER);
 			}
 			configuration.setTagTypes(tagTypes);
-			
+
 		} else if (null==configuration.getTagTypes()||configuration.getTagTypes().isEmpty()) {
 			configuration.setTagTypes(Sets.newHashSet(TagType.CATEGORY, TagType.GENRE));
 		}
