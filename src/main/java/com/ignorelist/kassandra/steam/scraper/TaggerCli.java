@@ -60,30 +60,24 @@ public class TaggerCli {
 		final PathResolver pathResolver=new PathResolver();
 		final BatchTagLoader tagLoader=new BatchTagLoader(new HtmlTagLoader(pathResolver.findCachePath("html")));
 		Tagger tagger=new Tagger(tagLoader);
-		Set<Path> sharedConfigPaths=new LinkedHashSet<>();
-		if (commandLine.hasOption("f")) {
-			String[] passedPaths=commandLine.getOptionValues("f");
-			if (0==passedPaths.length) {
-				throw new IllegalArgumentException("no paths passed in -f");
-			}
-			for (String p : passedPaths) {
-				sharedConfigPaths.add(Paths.get(p));
-			}
-		} else {
-			sharedConfigPaths=pathResolver.findSharedConfig();
-		}
+
+		Configuration configuration=commandLineToConfiguration(commandLine);
+
+		Set<Path> sharedConfigPaths=configuration.getSharedConfigPaths();
 		if (sharedConfigPaths.size()>1&&!commandLine.hasOption("w")) {
 			System.err.println("multiple sharedconfig.vdf available:\n"+Joiner.on("\n").join(sharedConfigPaths)+"\n, can not write to stdout. Need to specify -w or -f with a single sharedconfig.vdf");
 			System.exit(1);
 		}
+
 		Tagger.Options taggerOptions=new Tagger.Options();
 		final String[] removeTagsValues=commandLine.getOptionValues("remove");
 		if (null!=removeTagsValues) {
 			taggerOptions.setRemoveTags(Sets.newHashSet(removeTagsValues));
 		}
-		if (commandLine.hasOption("i")) {
-			final Path whitelistPath=Paths.get(commandLine.getOptionValue("i"));
-			Set<String> whiteList=Sets.newHashSet(Iterables.filter(Files.readAllLines(whitelistPath, Charsets.UTF_8), new Predicate<String>() {
+
+		final Path whiteListFile=configuration.getWhiteList();
+		if (null!=whiteListFile) {
+			Set<String> whiteList=Sets.newHashSet(Iterables.filter(Files.readAllLines(whiteListFile, Charsets.UTF_8), new Predicate<String>() {
 				@Override
 				public boolean apply(String input) {
 					return null!=input&&input.length()>0&&!input.startsWith("#");
@@ -91,8 +85,9 @@ public class TaggerCli {
 			}));
 			taggerOptions.setWhiteList(whiteList);
 		}
-		if (commandLine.hasOption("R")) {
-			Path replacementFile=Paths.get(commandLine.getOptionValue("R"));
+
+		Path replacementFile=configuration.getReplacements();
+		if (null!=replacementFile) {
 			final Reader replacementFileReader=Files.newBufferedReader(replacementFile, Charsets.UTF_8);
 			try {
 				Properties replacementProperties=new Properties();
@@ -105,18 +100,11 @@ public class TaggerCli {
 		}
 		final boolean removeNotWhiteListed=commandLine.hasOption("I");
 		taggerOptions.setRemoveNotWhiteListed(removeNotWhiteListed);
-		Set<TagType> tagTypes=new HashSet<>();
-		final boolean addCategories=!commandLine.hasOption("c");
-		if (addCategories) {
-			tagTypes.add(TagType.CATEGORY);
-		}
-		final boolean addGenres=!commandLine.hasOption("g");
-		if (addGenres) {
-			tagTypes.add(TagType.GENRE);
-		}
-		final boolean addUserTags=commandLine.hasOption("u");
-		if (addUserTags) {
-			tagTypes.add(TagType.USER);
+
+		Set<TagType> tagTypes=configuration.getTagTypes();
+		if (null==tagTypes) {
+			System.err.println("no tag types!");
+			System.exit(1);
 		}
 		taggerOptions.setTagTypes(EnumSet.copyOf(tagTypes));
 		final boolean printTags=commandLine.hasOption("p");
@@ -138,6 +126,48 @@ public class TaggerCli {
 				}
 			}
 		}
+	}
+
+	private static Configuration commandLineToConfiguration(CommandLine commandLine) throws IOException {
+		Configuration configuration=new Configuration();
+		final PathResolver pathResolver=new PathResolver();
+		Set<Path> sharedConfigPaths=new LinkedHashSet<>();
+		if (commandLine.hasOption("f")) {
+			String[] passedPaths=commandLine.getOptionValues("f");
+			if (0==passedPaths.length) {
+				throw new IllegalArgumentException("no paths passed in -f");
+			}
+			for (String p : passedPaths) {
+				sharedConfigPaths.add(Paths.get(p));
+			}
+		} else {
+			sharedConfigPaths=pathResolver.findSharedConfig();
+		}
+		configuration.setSharedConfigPaths(sharedConfigPaths);
+
+		if (commandLine.hasOption("R")) {
+			Path replacementFile=Paths.get(commandLine.getOptionValue("R"));
+			configuration.setReplacements(replacementFile);
+		}
+		if (commandLine.hasOption("i")) {
+			Path whiteListFile=Paths.get(commandLine.getOptionValue("i"));
+			configuration.setWhiteList(whiteListFile);
+		}
+		Set<TagType> tagTypes=new HashSet<>();
+		final boolean addCategories=!commandLine.hasOption("c");
+		if (addCategories) {
+			tagTypes.add(TagType.CATEGORY);
+		}
+		final boolean addGenres=!commandLine.hasOption("g");
+		if (addGenres) {
+			tagTypes.add(TagType.GENRE);
+		}
+		final boolean addUserTags=commandLine.hasOption("u");
+		if (addUserTags) {
+			tagTypes.add(TagType.USER);
+		}
+		configuration.setTagTypes(tagTypes);
+		return configuration;
 	}
 
 	private static Options buildOptions() {
