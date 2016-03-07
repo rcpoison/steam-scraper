@@ -5,27 +5,19 @@
  */
 package com.ignorelist.kassandra.steam.scraper;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.technofovea.hl2parse.vdf.VdfNode;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import org.antlr.runtime.RecognitionException;
 import org.apache.commons.cli.CommandLine;
@@ -35,7 +27,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -61,7 +52,7 @@ public class TaggerCli {
 		final BatchTagLoader tagLoader=new BatchTagLoader(new HtmlTagLoader(pathResolver.findCachePath("html")));
 		Tagger tagger=new Tagger(tagLoader);
 
-		Configuration configuration=commandLineToConfiguration(commandLine);
+		Configuration configuration=toConfiguration(commandLine);
 
 		Set<Path> sharedConfigPaths=configuration.getSharedConfigPaths();
 		if (sharedConfigPaths.size()>1&&!commandLine.hasOption("w")) {
@@ -69,35 +60,13 @@ public class TaggerCli {
 			System.exit(1);
 		}
 
-		Tagger.Options taggerOptions=new Tagger.Options();
+		Tagger.Options taggerOptions=Tagger.Options.fromConfiguration(configuration);
+
 		final String[] removeTagsValues=commandLine.getOptionValues("remove");
 		if (null!=removeTagsValues) {
 			taggerOptions.setRemoveTags(Sets.newHashSet(removeTagsValues));
 		}
 
-		final Path whiteListFile=configuration.getWhiteList();
-		if (null!=whiteListFile) {
-			Set<String> whiteList=Sets.newHashSet(Iterables.filter(Files.readAllLines(whiteListFile, Charsets.UTF_8), new Predicate<String>() {
-				@Override
-				public boolean apply(String input) {
-					return null!=input&&input.length()>0&&!input.startsWith("#");
-				}
-			}));
-			taggerOptions.setWhiteList(whiteList);
-		}
-
-		Path replacementFile=configuration.getReplacements();
-		if (null!=replacementFile) {
-			final Reader replacementFileReader=Files.newBufferedReader(replacementFile, Charsets.UTF_8);
-			try {
-				Properties replacementProperties=new Properties();
-				replacementProperties.load(replacementFileReader);
-				Map<String, String> replacementMap=Maps.fromProperties(replacementProperties);
-				taggerOptions.setReplacementMap(replacementMap);
-			} finally {
-				IOUtils.closeQuietly(replacementFileReader);
-			}
-		}
 		final boolean removeNotWhiteListed=commandLine.hasOption("I");
 		taggerOptions.setRemoveNotWhiteListed(removeNotWhiteListed);
 
@@ -106,7 +75,7 @@ public class TaggerCli {
 			System.err.println("no tag types!");
 			System.exit(1);
 		}
-		taggerOptions.setTagTypes(EnumSet.copyOf(tagTypes));
+		
 		final boolean printTags=commandLine.hasOption("p");
 		if (printTags) {
 			Set<String> availableTags=tagger.getAvailableTags(sharedConfigPaths, taggerOptions);
@@ -128,7 +97,7 @@ public class TaggerCli {
 		}
 	}
 
-	private static Configuration commandLineToConfiguration(CommandLine commandLine) throws IOException {
+	private static Configuration toConfiguration(CommandLine commandLine) throws IOException {
 		Configuration configuration=new Configuration();
 		final PathResolver pathResolver=new PathResolver();
 		Set<Path> sharedConfigPaths=new LinkedHashSet<>();

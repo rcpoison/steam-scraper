@@ -5,21 +5,29 @@
  */
 package com.ignorelist.kassandra.steam.scraper;
 
+import com.google.common.base.Charsets;
+import com.google.common.base.Predicate;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 import com.technofovea.hl2parse.vdf.VdfNode;
 import com.technofovea.hl2parse.vdf.VdfRoot;
 import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.antlr.runtime.RecognitionException;
+import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -34,6 +42,45 @@ public class Tagger {
 		private Set<String> whiteList;
 		private boolean removeNotWhiteListed;
 		private Map<String, String> replacementMap;
+
+		public static Options fromConfiguration(Configuration configuration) throws IOException {
+			Options taggerOptions=new Options();
+
+			final Path whiteListFile=configuration.getWhiteList();
+			if (null!=whiteListFile) {
+				taggerOptions.setWhiteList(readWhiteList(whiteListFile));
+			}
+
+			final Path replacementFile=configuration.getReplacements();
+			if (null!=replacementFile) {
+				taggerOptions.setReplacementMap(readReplacements(replacementFile));
+			}
+
+			taggerOptions.setTagTypes(EnumSet.copyOf(configuration.getTagTypes()));
+
+			return taggerOptions;
+		}
+
+		private static Set<String> readWhiteList(Path whiteListFile) throws IOException {
+			return Sets.newHashSet(Iterables.filter(Files.readAllLines(whiteListFile, Charsets.UTF_8), new Predicate<String>() {
+				@Override
+				public boolean apply(String input) {
+					return null!=input&&input.length()>0&&!input.startsWith("#");
+				}
+			}));
+		}
+
+		private static Map<String, String> readReplacements(Path replacementFile) throws IOException {
+			final Reader replacementFileReader=Files.newBufferedReader(replacementFile, Charsets.UTF_8);
+			try {
+				Properties replacementProperties=new Properties();
+				replacementProperties.load(replacementFileReader);
+				Map<String, String> replacementMap=Maps.fromProperties(replacementProperties);
+				return replacementMap;
+			} finally {
+				IOUtils.closeQuietly(replacementFileReader);
+			}
+		}
 
 		public EnumSet<TagType> getTagTypes() {
 			return tagTypes;
