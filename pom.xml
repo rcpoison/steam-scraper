@@ -68,7 +68,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>com.ignorelist.kassandra.steam.scraper.Tagger</mainClass>
+							<mainClass>com.ignorelist.kassandra.steam.scraper.TaggerCli</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

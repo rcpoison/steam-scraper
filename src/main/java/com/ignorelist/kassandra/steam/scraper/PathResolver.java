@@ -105,4 +105,12 @@ public class PathResolver {
 		}
 		return cachePath;
 	}
+
+	public Path findConfiguration() throws IOException {
+		Path configPath=Paths.get(System.getProperty("user.home"), ".config", "steam-scraper");
+		if (!Files.isDirectory(configPath)) {
+			Files.createDirectories(configPath);
+		}
+		return configPath.resolve("steam-scraper.conf");
+	}
 }
