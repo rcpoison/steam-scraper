@@ -5,6 +5,7 @@
  */
 package com.ignorelist.kassandra.steam.scraper;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
@@ -13,6 +14,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,6 +23,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -159,6 +162,17 @@ public class Configuration {
 			properties.setProperty(CONFIG_DOWNLOAD_THREADS, downloadThreads.toString());
 		}
 		return properties;
+	}
+
+	public static Configuration fromPropertiesFile(Path propertiesFile) throws IOException {
+		Reader propertiesReader=Files.newBufferedReader(propertiesFile, Charsets.UTF_8);
+		try {
+			Properties properties=new Properties();
+			properties.load(propertiesReader);
+			return fromProperties(properties);
+		} finally {
+			IOUtils.closeQuietly(propertiesReader);
+		}
 	}
 
 	public static Configuration fromProperties(Properties properties) {
