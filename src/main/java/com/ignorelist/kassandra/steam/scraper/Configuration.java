@@ -12,6 +12,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,17 +37,28 @@ public class Configuration {
 		}
 	};
 	private static final Function<String, Path> STRING_TO_PATH=new Function<String, Path>() {
+
 		@Override
 		public Path apply(String input) {
 			if (Strings.isNullOrEmpty(input)) {
 				return null;
 			}
-			Path path=Paths.get(input.trim());
-			if (!Files.isRegularFile(path)) {
-				LOG.log(Level.WARNING, "file does not exist: {0}", path.toString());
-				return null;
+			final Path path=Paths.get(input.trim());
+			if (Files.isRegularFile(path)) {
+				return path;
 			}
-			return path;
+			if (!path.isAbsolute()) {
+				try {
+					final Path siblingPath=new PathResolver().findConfiguration().resolveSibling(path);
+					if (!Files.isRegularFile(siblingPath)) {
+						return siblingPath;
+					}
+				} catch (IOException ex) {
+					LOG.log(Level.SEVERE, null, ex);
+				}
+			}
+			LOG.log(Level.WARNING, "file does not exist: {0}", path.toString());
+			return null;
 		}
 	};
 	private static final Function<String, TagType> STRING_TO_TAG_TYPE=new Function<String, TagType>() {
