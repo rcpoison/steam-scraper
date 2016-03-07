@@ -45,13 +45,13 @@ public class Configuration {
 			}
 			final Path path=Paths.get(input.trim());
 			if (Files.isRegularFile(path)) {
-				return path;
+				return path.toAbsolutePath();
 			}
 			if (!path.isAbsolute()) {
 				try {
 					final Path siblingPath=new PathResolver().findConfiguration().resolveSibling(path);
 					if (!Files.isRegularFile(siblingPath)) {
-						return siblingPath;
+						return siblingPath.toAbsolutePath();
 					}
 				} catch (IOException ex) {
 					LOG.log(Level.SEVERE, null, ex);
