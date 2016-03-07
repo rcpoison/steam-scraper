@@ -79,12 +79,14 @@ public class Configuration {
 	private static final String CONFIG_DOWNLOAD_THREADS="downloadThreads";
 	private static final String CONFIG_REPLACEMENTS="replacements";
 	private static final String CONFIG_WHITE_LIST="whiteList";
+	private static final String CONFIG_REMOVE_NOT_WHITE_LISTED="removeNotWhiteListed";
 	private static final String CONFIG_TAG_TYPES="tagTypes";
 	private static final String CONFIG_SHARED_CONFIG_PATHS="sharedConfigPaths";
 
 	private Set<Path> sharedConfigPaths;
 	private Set<TagType> tagTypes;
 	private Path whiteList;
+	private Boolean removeNotWhiteListed;
 	private Path replacements;
 	private Integer downloadThreads;
 
@@ -110,6 +112,14 @@ public class Configuration {
 
 	public void setWhiteList(Path whiteList) {
 		this.whiteList=whiteList;
+	}
+
+	public Boolean getRemoveNotWhiteListed() {
+		return removeNotWhiteListed;
+	}
+
+	public void setRemoveNotWhiteListed(Boolean removeNotWhiteListed) {
+		this.removeNotWhiteListed=removeNotWhiteListed;
 	}
 
 	public Path getReplacements() {
@@ -139,6 +149,9 @@ public class Configuration {
 		if (null!=whiteList) {
 			properties.setProperty(CONFIG_WHITE_LIST, PATH_TO_STRING.apply(whiteList));
 		}
+		if (null!=removeNotWhiteListed) {
+			properties.setProperty(CONFIG_REMOVE_NOT_WHITE_LISTED, removeNotWhiteListed.toString());
+		}
 		if (null!=replacements) {
 			properties.setProperty(CONFIG_REPLACEMENTS, PATH_TO_STRING.apply(replacements));
 		}
@@ -167,6 +180,10 @@ public class Configuration {
 			configuration.setTagTypes(tags);
 		}
 		configuration.setWhiteList(STRING_TO_PATH.apply(properties.getProperty(CONFIG_WHITE_LIST)));
+		String removeNotWhiteListed=properties.getProperty(CONFIG_REMOVE_NOT_WHITE_LISTED);
+		if (null!=removeNotWhiteListed) {
+			configuration.setRemoveNotWhiteListed(Boolean.valueOf(removeNotWhiteListed));
+		}
 		configuration.setReplacements(STRING_TO_PATH.apply(properties.getProperty(CONFIG_REPLACEMENTS)));
 		String downloadThreads=properties.getProperty(CONFIG_DOWNLOAD_THREADS);
 		if (null!=downloadThreads) {
