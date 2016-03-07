@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.ignorelist.kassandra</groupId>
 	<artifactId>steam-scraper</artifactId>
-	<version>1.0</version>
+	<version>1.1</version>
 	<packaging>jar</packaging>
 	<dependencies>
 		<dependency>
@@ -68,7 +68,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>com.ignorelist.kassandra.steam.scraper.Tagger</mainClass>
+							<mainClass>com.ignorelist.kassandra.steam.scraper.TaggerCli</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
