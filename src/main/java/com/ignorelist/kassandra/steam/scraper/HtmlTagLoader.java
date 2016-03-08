@@ -94,6 +94,10 @@ public class HtmlTagLoader implements TagLoader {
 						Elements userTags=document.select("a.app_tag");
 						copyText(userTags, gameInfo.getTags().get(TagType.USER));
 					}
+					if (types.contains(TagType.VR)) {
+						Elements vrSupport=document.select("div.game_area_details_specs a.name[href*=#vrsupport=");
+						copyText(vrSupport, gameInfo.getTags().get(TagType.VR));
+					}
 				} finally {
 					IOUtils.closeQuietly(inputStream);
 				}
