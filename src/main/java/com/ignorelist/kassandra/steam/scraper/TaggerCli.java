@@ -96,7 +96,7 @@ public class TaggerCli {
 
 		final boolean printTags=commandLine.hasOption("p");
 
-		final BatchTagLoader tagLoader=new BatchTagLoader(new HtmlTagLoader(pathResolver.findCachePath("html")));
+		final BatchTagLoader tagLoader=new BatchTagLoader(new HtmlTagLoader(pathResolver.findCachePath("html")), configuration.getDownloadThreads());
 		if (commandLine.hasOption("v")) {
 			tagLoader.registerEventListener(new CliEventLoggerLoaded());
 		}
@@ -170,6 +170,12 @@ public class TaggerCli {
 		} else if (null==configuration.getTagTypes()||configuration.getTagTypes().isEmpty()) {
 			configuration.setTagTypes(Sets.newHashSet(TagType.CATEGORY, TagType.GENRE));
 		}
+		
+		if (commandLine.hasOption("t")) {
+			configuration.setDownloadThreads(Integer.valueOf(commandLine.getOptionValue("t")));
+		} else if (null==configuration.getDownloadThreads()) {
+			configuration.setDownloadThreads(Runtime.getRuntime().availableProcessors()+1);
+		}
 
 		return configuration;
 	}
@@ -182,6 +188,7 @@ public class TaggerCli {
 		options.addOption("c", false, "don't add categories");
 		options.addOption("g", false, "don't add genres");
 		options.addOption("u", false, "add user tags");
+		options.addOption("t", true, "number of threads");
 		options.addOption("p", false, "print all available tags (respects -c, -g and -u)");
 		options.addOption(Option.builder("r").longOpt("remove").hasArgs().argName("category").desc("remove categories").build());
 		options.addOption(Option.builder("i").hasArg().argName("file").desc("whitelist for tags to include (one tag per line)").build());

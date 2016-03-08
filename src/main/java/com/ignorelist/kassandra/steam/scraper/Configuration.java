@@ -134,7 +134,7 @@ public class Configuration {
 		this.replacements=replacements;
 	}
 
-	public int getDownloadThreads() {
+	public Integer getDownloadThreads() {
 		return downloadThreads;
 	}
 
