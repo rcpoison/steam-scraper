@@ -31,14 +31,18 @@ public class HtmlTagLoader implements TagLoader {
 
 	private final FileCache cache;
 
-	public HtmlTagLoader(Path cachePath) {
+	public HtmlTagLoader(Path cachePath, int cacheExpiryDays) {
 		cache=new FileCache(cachePath, new CacheLoader<String, InputStream>() {
 			@Override
 			public InputStream load(String k) throws Exception {
 				URL url=new URL(buildPageUrl(k));
 				return URLUtil.openInputStream(url);
 			}
-		}, TimeUnit.DAYS, 7);
+		}, TimeUnit.DAYS, cacheExpiryDays);
+	}
+
+	public HtmlTagLoader(Path cachePath) {
+		this(cachePath, 7);
 	}
 
 	private static String buildPageUrl(String k) {
@@ -93,6 +97,10 @@ public class HtmlTagLoader implements TagLoader {
 					if (types.contains(TagType.USER)) {
 						Elements userTags=document.select("a.app_tag");
 						copyText(userTags, gameInfo.getTags().get(TagType.USER));
+					}
+					if (types.contains(TagType.VR)) {
+						Elements vrSupport=document.select("div.game_area_details_specs a.name[href*=#vrsupport=");
+						copyText(vrSupport, gameInfo.getTags().get(TagType.VR));
 					}
 				} finally {
 					IOUtils.closeQuietly(inputStream);

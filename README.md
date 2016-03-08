@@ -23,9 +23,11 @@ usage: java -jar steam-scraper-*.one-jar.jar
  -r,--remove <category>   remove categories
  -R <file>                file containing replacements (one replacement
                           per line, in the format original=replacement)
+ -t <arg>                 number of threads
  -u                       add user tags
+ -v                       verbose output
  -w                       directly overwrite sharedconfig.vdf (quit steam
-                          before running!)
+                          before running!
 ```
 
 ### Example
@@ -56,6 +58,34 @@ Replacement file example:
 Rogue-lite = Rogue-like
 Single-player = Singleplayer
 ```
+
+## Configuration file
+A configuration based on the CLI parameters will be created if none exists yet.
+The configuration file is located in ~/.config/steam-scraper/steam-scraper.conf
+
+```
+# paths to sharedconfig.vdf files, seperated by ':'
+sharedConfigPaths=/path/to/sharedconfig.vdf
+
+# tag types to scrape
+tagTypes=GENRE,CATEGORY,USER,VR
+
+# whitelist file path
+whiteList=/path/to/whitelist.txt
+
+# replacements file
+replacements=/path/to/replacements.txt
+
+# whether to remove all tags, including existing, which are not in whitelist. WARNING: will also remove favorite tags if not in whitelist!
+removeNotWhiteListed=false
+
+# number of threads to use for downloading/parsing, defaults to #CPUs+1
+downloadThreads=8
+
+# number of days before cached store pages expire, defaults to 7
+cacheExpiryDays=7
+```
+
 
 ## Build dependencies
 * maven 3
