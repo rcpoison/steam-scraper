@@ -86,6 +86,7 @@ public class Configuration {
 	private static final String CONFIG_REMOVE_NOT_WHITE_LISTED="removeNotWhiteListed";
 	private static final String CONFIG_TAG_TYPES="tagTypes";
 	private static final String CONFIG_SHARED_CONFIG_PATHS="sharedConfigPaths";
+	private static final String CONFIG_CACHE_EXPIRY_DAYS="cacheExpiryDays";
 
 	private Set<Path> sharedConfigPaths;
 	private Set<TagType> tagTypes;
@@ -93,6 +94,7 @@ public class Configuration {
 	private Boolean removeNotWhiteListed;
 	private Path replacements;
 	private Integer downloadThreads;
+	private Integer cacheExpiryDays;
 
 	public Set<Path> getSharedConfigPaths() {
 		return sharedConfigPaths;
@@ -142,6 +144,14 @@ public class Configuration {
 		this.downloadThreads=downloadThreads;
 	}
 
+	public Integer getCacheExpiryDays() {
+		return cacheExpiryDays;
+	}
+
+	public void setCacheExpiryDays(Integer cacheExpiryDays) {
+		this.cacheExpiryDays=cacheExpiryDays;
+	}
+
 	public void writeProperties(Path file) throws IOException {
 		Writer propertiesWriter=Files.newBufferedWriter(file, Charsets.UTF_8);
 		try {
@@ -170,6 +180,9 @@ public class Configuration {
 		}
 		if (null!=downloadThreads) {
 			properties.setProperty(CONFIG_DOWNLOAD_THREADS, downloadThreads.toString());
+		}
+		if (null!=cacheExpiryDays) {
+			properties.setProperty(CONFIG_CACHE_EXPIRY_DAYS, cacheExpiryDays.toString());
 		}
 		return properties;
 	}
@@ -214,6 +227,15 @@ public class Configuration {
 			try {
 				configuration.setDownloadThreads(Integer.valueOf(downloadThreads));
 			} catch (NumberFormatException nfe) {
+				LOG.log(Level.WARNING, "failed to parse downloadThreads: {0}", downloadThreads);
+			}
+		}
+		String cacheExpiryDays=properties.getProperty(CONFIG_CACHE_EXPIRY_DAYS);
+		if (null!=cacheExpiryDays) {
+			try {
+				configuration.setCacheExpiryDays(Integer.valueOf(cacheExpiryDays));
+			} catch (NumberFormatException nfe) {
+				LOG.log(Level.WARNING, "failed to parse cacheExpiryDays: {0}", downloadThreads);
 			}
 		}
 		return configuration;
