@@ -96,7 +96,8 @@ public class TaggerCli {
 
 		final boolean printTags=commandLine.hasOption("p");
 
-		final BatchTagLoader tagLoader=new BatchTagLoader(new HtmlTagLoader(pathResolver.findCachePath("html")), configuration.getDownloadThreads());
+		final HtmlTagLoader htmlTagLoader=new HtmlTagLoader(pathResolver.findCachePath("html"), null==configuration.getCacheExpiryDays() ? 7 : configuration.getCacheExpiryDays());
+		final BatchTagLoader tagLoader=new BatchTagLoader(htmlTagLoader, configuration.getDownloadThreads());
 		if (commandLine.hasOption("v")) {
 			tagLoader.registerEventListener(new CliEventLoggerLoaded());
 		}
@@ -170,7 +171,7 @@ public class TaggerCli {
 		} else if (null==configuration.getTagTypes()||configuration.getTagTypes().isEmpty()) {
 			configuration.setTagTypes(Sets.newHashSet(TagType.CATEGORY, TagType.GENRE));
 		}
-		
+
 		if (commandLine.hasOption("t")) {
 			configuration.setDownloadThreads(Integer.valueOf(commandLine.getOptionValue("t")));
 		} else if (null==configuration.getDownloadThreads()) {

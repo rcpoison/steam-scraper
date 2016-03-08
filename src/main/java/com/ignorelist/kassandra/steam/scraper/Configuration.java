@@ -233,7 +233,12 @@ public class Configuration {
 		String cacheExpiryDays=properties.getProperty(CONFIG_CACHE_EXPIRY_DAYS);
 		if (null!=cacheExpiryDays) {
 			try {
-				configuration.setCacheExpiryDays(Integer.valueOf(cacheExpiryDays));
+				final Integer d=Integer.valueOf(cacheExpiryDays);
+				if (d>=1) {
+					configuration.setCacheExpiryDays(d);
+				} else {
+					LOG.log(Level.WARNING, "cacheExpiryDays must be >= 1");
+				}
 			} catch (NumberFormatException nfe) {
 				LOG.log(Level.WARNING, "failed to parse cacheExpiryDays: {0}", downloadThreads);
 			}
