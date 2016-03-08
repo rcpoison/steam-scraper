@@ -31,14 +31,18 @@ public class HtmlTagLoader implements TagLoader {
 
 	private final FileCache cache;
 
-	public HtmlTagLoader(Path cachePath) {
+	public HtmlTagLoader(Path cachePath, int cacheExpiryDays) {
 		cache=new FileCache(cachePath, new CacheLoader<String, InputStream>() {
 			@Override
 			public InputStream load(String k) throws Exception {
 				URL url=new URL(buildPageUrl(k));
 				return URLUtil.openInputStream(url);
 			}
-		}, TimeUnit.DAYS, 7);
+		}, TimeUnit.DAYS, cacheExpiryDays);
+	}
+
+	public HtmlTagLoader(Path cachePath) {
+		this(cachePath, 7);
 	}
 
 	private static String buildPageUrl(String k) {
