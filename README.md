@@ -81,6 +81,9 @@ removeNotWhiteListed=false
 
 # number of threads to use for downloading/parsing, defaults to #CPUs+1
 downloadThreads=8
+
+# number of days before cached store pages expire, defaults to 7
+cacheExpiryDays=7
 ```
 
 
