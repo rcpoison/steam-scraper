@@ -139,6 +139,10 @@ public class FileCache extends AbstractLoadingCache<String, InputStream> {
 		OutputStream outputStream=new GZIPOutputStream(Files.newOutputStream(cacheFile));
 		try {
 			IOUtils.copy(value, outputStream);
+		} catch(IOException e) {
+			IOUtils.closeQuietly(outputStream);
+			Files.delete(cacheFile);
+			throw e;
 		} finally {
 			IOUtils.closeQuietly(outputStream);
 		}
