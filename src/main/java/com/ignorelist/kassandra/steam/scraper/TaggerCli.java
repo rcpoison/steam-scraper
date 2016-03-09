@@ -35,11 +35,11 @@ import org.apache.commons.cli.ParseException;
  */
 public class TaggerCli {
 
-	private static class CliEventLoggerLoaded {
+	static class CliEventLoggerLoaded {
 
 		@Subscribe
 		public void logLoadedEvent(BatchTagLoader.GameInfoLoadedEvent event) {
-			System.err.println(event.getGameInfo().getId()+" ("+event.getGameInfo().getName()+") loaded in "+event.getDurationMillis()+"ms");
+			System.err.println(event.getGameInfo().toString()+" loaded in "+event.getDurationMillis()+"ms");
 		}
 	}
 
