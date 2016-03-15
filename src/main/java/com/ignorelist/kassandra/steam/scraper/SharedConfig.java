@@ -19,7 +19,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -35,6 +34,19 @@ import org.apache.commons.jxpath.JXPathContext;
  * @author poison
  */
 public class SharedConfig {
+
+	private static final Function<VdfAttribute, String> ATTR_VALUE=new Function<VdfAttribute, String>() {
+		@Override
+		public String apply(VdfAttribute input) {
+			return input.getValue();
+		}
+	};
+	private static final Predicate<VdfNode> PREDICATE_TAGS_NODE=new Predicate<VdfNode>() {
+		@Override
+		public boolean apply(VdfNode input) {
+			return "tags".equals(input.getName());
+		}
+	};
 
 	private final Path path;
 
@@ -89,9 +101,9 @@ public class SharedConfig {
 
 	public synchronized Map<Long, VdfNode> getGameNodeMap() {
 		if (null==gameNodeMap) {
-			VdfNode appsNode=getAppsNode();
+			final VdfNode aN=getAppsNode();
 			gameNodeMap=new HashMap<>();
-			for (VdfNode gameNode : appsNode.getChildren()) {
+			for (VdfNode gameNode : aN.getChildren()) {
 				try {
 					final long gameId=Long.parseLong(gameNode.getName());
 					gameNodeMap.put(gameId, gameNode);
@@ -134,12 +146,7 @@ public class SharedConfig {
 	}
 
 	public static VdfNode getTagNode(VdfNode gameNode) {
-		return Iterables.find(gameNode.getChildren(), new Predicate<VdfNode>() {
-			@Override
-			public boolean apply(VdfNode input) {
-				return "tags".equals(input.getName());
-			}
-		});
+		return Iterables.find(gameNode.getChildren(), PREDICATE_TAGS_NODE);
 	}
 
 	public VdfNode getTagNode(Long gameId) {
@@ -147,12 +154,7 @@ public class SharedConfig {
 	}
 
 	private static Set<String> getTags(VdfNode tagNode) {
-		return Sets.newLinkedHashSet(Iterables.transform(tagNode.getAttributes(), new Function<VdfAttribute, String>() {
-			@Override
-			public String apply(VdfAttribute input) {
-				return input.getValue();
-			}
-		}));
+		return Sets.newLinkedHashSet(Iterables.transform(tagNode.getAttributes(), ATTR_VALUE));
 	}
 
 	public Set<String> getTags(Long gameId) {

@@ -117,4 +117,12 @@ public class GameInfo implements Iterable<String>, Serializable {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder sb=new StringBuilder()
+				.append(id)
+				.append(" (").append(name).append(")");
+		return sb.toString();
+	}
+
 }
