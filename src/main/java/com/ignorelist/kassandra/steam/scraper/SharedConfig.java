@@ -36,6 +36,13 @@ import org.apache.commons.jxpath.JXPathContext;
  */
 public class SharedConfig {
 
+	private static final Function<VdfAttribute, String> ATTR_VALUE=new Function<VdfAttribute, String>() {
+		@Override
+		public String apply(VdfAttribute input) {
+			return input.getValue();
+		}
+	};
+
 	private final Path path;
 
 	private VdfRoot rootNode;
@@ -147,12 +154,7 @@ public class SharedConfig {
 	}
 
 	private static Set<String> getTags(VdfNode tagNode) {
-		return Sets.newLinkedHashSet(Iterables.transform(tagNode.getAttributes(), new Function<VdfAttribute, String>() {
-			@Override
-			public String apply(VdfAttribute input) {
-				return input.getValue();
-			}
-		}));
+		return Sets.newLinkedHashSet(Iterables.transform(tagNode.getAttributes(), ATTR_VALUE));
 	}
 
 	public Set<String> getTags(Long gameId) {
