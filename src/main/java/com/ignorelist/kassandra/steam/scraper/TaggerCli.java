@@ -6,6 +6,7 @@
 package com.ignorelist.kassandra.steam.scraper;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
 import com.technofovea.hl2parse.vdf.VdfNode;
@@ -16,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -34,6 +36,11 @@ import org.apache.commons.cli.ParseException;
  * @author poison
  */
 public class TaggerCli {
+
+	private static final ImmutableSet<PosixFilePermission> SHARED_CONFIG_POSIX_PERMS=ImmutableSet.of(
+			PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE, PosixFilePermission.OWNER_EXECUTE,
+			PosixFilePermission.GROUP_READ, PosixFilePermission.GROUP_WRITE, PosixFilePermission.GROUP_EXECUTE,
+			PosixFilePermission.OTHERS_READ, PosixFilePermission.OTHERS_EXECUTE);
 
 	static class CliEventLoggerLoaded {
 
@@ -114,6 +121,11 @@ public class TaggerCli {
 					Files.copy(path, backup, StandardCopyOption.REPLACE_EXISTING);
 					System.err.println("backup up "+path+" to "+backup);
 					Files.copy(new ByteArrayInputStream(tagged.toPrettyString().getBytes(StandardCharsets.UTF_8)), path, StandardCopyOption.REPLACE_EXISTING);
+					try {
+						Files.setPosixFilePermissions(path, SHARED_CONFIG_POSIX_PERMS);
+					} catch (Exception e) {
+						System.err.println(e);
+					}
 					System.err.println("wrote "+path);
 				} else {
 					System.out.println(tagged.toPrettyString());
