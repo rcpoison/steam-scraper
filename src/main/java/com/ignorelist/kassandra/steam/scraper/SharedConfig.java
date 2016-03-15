@@ -41,6 +41,12 @@ public class SharedConfig {
 			return input.getValue();
 		}
 	};
+	private static final Predicate<VdfNode> PREDICATE_TAGS_NODE=new Predicate<VdfNode>() {
+		@Override
+		public boolean apply(VdfNode input) {
+			return "tags".equals(input.getName());
+		}
+	};
 
 	private final Path path;
 
@@ -140,12 +146,7 @@ public class SharedConfig {
 	}
 
 	public static VdfNode getTagNode(VdfNode gameNode) {
-		return Iterables.find(gameNode.getChildren(), new Predicate<VdfNode>() {
-			@Override
-			public boolean apply(VdfNode input) {
-				return "tags".equals(input.getName());
-			}
-		});
+		return Iterables.find(gameNode.getChildren(), PREDICATE_TAGS_NODE);
 	}
 
 	public VdfNode getTagNode(Long gameId) {
