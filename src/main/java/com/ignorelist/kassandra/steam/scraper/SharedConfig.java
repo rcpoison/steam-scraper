@@ -19,7 +19,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -96,9 +95,9 @@ public class SharedConfig {
 
 	public synchronized Map<Long, VdfNode> getGameNodeMap() {
 		if (null==gameNodeMap) {
-			VdfNode appsNode=getAppsNode();
+			final VdfNode aN=getAppsNode();
 			gameNodeMap=new HashMap<>();
-			for (VdfNode gameNode : appsNode.getChildren()) {
+			for (VdfNode gameNode : aN.getChildren()) {
 				try {
 					final long gameId=Long.parseLong(gameNode.getName());
 					gameNodeMap.put(gameId, gameNode);
