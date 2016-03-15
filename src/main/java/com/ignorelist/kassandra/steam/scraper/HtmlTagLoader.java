@@ -68,24 +68,13 @@ public class HtmlTagLoader implements TagLoader {
 					if (null!=nameElement&&null!=nameElement.text()) {
 						gameInfo.setName(nameElement.text().trim());
 					}
-					Elements appIcon=document.select("div.apphub_AppIcon img");
-					Element iconElement=Iterables.getFirst(appIcon, null);
-					if (null!=iconElement&&null!=iconElement.attr("src")) {
-						try {
-							gameInfo.setIcon(new URI(iconElement.attr("src")));
-						} catch (URISyntaxException ex) {
-							Logger.getLogger(HtmlTagLoader.class.getName()).log(Level.SEVERE, null, ex);
-						}
-					}
-					Elements headerImage=document.select("img.game_header_image_full");
-					Element headerImageElement=Iterables.getFirst(headerImage, null);
-					if (null!=headerImageElement&&null!=headerImageElement.attr("src")) {
-						try {
-							gameInfo.setHeaderImage(new URI(headerImageElement.attr("src")));
-						} catch (URISyntaxException ex) {
-							Logger.getLogger(HtmlTagLoader.class.getName()).log(Level.SEVERE, null, ex);
-						}
-					}
+
+					Elements appIconElements=document.select("div.apphub_AppIcon img");
+					gameInfo.setIcon(getSrcUri(appIconElements));
+
+					Elements headerImageElements=document.select("img.game_header_image_full");
+					gameInfo.setHeaderImage(getSrcUri(headerImageElements));
+
 					if (types.contains(TagType.CATEGORY)) {
 						Elements categories=document.select("div#category_block a.name");
 						copyText(categories, gameInfo.getTags().get(TagType.CATEGORY));
@@ -113,6 +102,23 @@ public class HtmlTagLoader implements TagLoader {
 		}
 
 		return gameInfo;
+	}
+
+	private static URI getSrcUri(Elements elements) {
+		final Element first=Iterables.getFirst(elements, null);
+		if (null==first) {
+			return null;
+		}
+		final String srcString=first.attr("src");
+		if (null==srcString) {
+			return null;
+		}
+		try {
+			return new URI(srcString);
+		} catch (URISyntaxException ex) {
+			Logger.getLogger(HtmlTagLoader.class.getName()).log(Level.SEVERE, null, ex);
+			return null;
+		}
 	}
 
 	private static void copyText(Elements elements, Set<String> target) {
