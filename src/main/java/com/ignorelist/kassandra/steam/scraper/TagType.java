@@ -13,6 +13,7 @@ public enum TagType {
 	CATEGORY,
 	GENRE,
 	USER,
+	USER_HIDDEN,
 	VR
 
 }
