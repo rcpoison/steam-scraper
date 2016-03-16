@@ -186,13 +186,9 @@ public class Tagger {
 		if (null!=taggerOptions.getWhiteList()&&!taggerOptions.getWhiteList().isEmpty()) {
 			externalTags.retainAll(taggerOptions.getWhiteList());
 		}
+
 		existingTags.addAll(externalTags);
-		if (null!=taggerOptions.getRemoveTags()) {
-			existingTags.removeAll(taggerOptions.getRemoveTags());
-		}
-		if (null!=taggerOptions.getWhiteList()&&!taggerOptions.getWhiteList().isEmpty()&&taggerOptions.isRemoveNotWhiteListed()) {
-			existingTags.retainAll(taggerOptions.getWhiteList());
-		}
+
 		if (null!=taggerOptions.getReplacementMap()) {
 			for (Map.Entry<String, String> e : taggerOptions.getReplacementMap().entrySet()) {
 				if (existingTags.remove(e.getKey())) {
@@ -200,6 +196,14 @@ public class Tagger {
 				}
 			}
 		}
+
+		if (null!=taggerOptions.getRemoveTags()) {
+			existingTags.removeAll(taggerOptions.getRemoveTags());
+		}
+		if (null!=taggerOptions.getWhiteList()&&!taggerOptions.getWhiteList().isEmpty()&&taggerOptions.isRemoveNotWhiteListed()) {
+			existingTags.retainAll(taggerOptions.getWhiteList());
+		}
+
 		sharedConfig.setTags(gameId, existingTags);
 	}
 
