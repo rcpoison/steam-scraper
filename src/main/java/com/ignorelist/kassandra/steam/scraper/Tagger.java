@@ -175,14 +175,14 @@ public class Tagger {
 		Map<Long, GameInfo> availableTags=tagLoader.load(availableGameIds, taggerOptions.getTagTypes());
 
 		for (Long gameId : availableGameIds) {
-			addTags(sharedConfig, gameId, taggerOptions, availableTags.get(gameId).getAllTags());
+			addTags(sharedConfig, gameId, taggerOptions, availableTags.get(gameId).getAllTags(taggerOptions.getTagTypes()));
 		}
 		return sharedConfig.getRootNode();
 	}
 
 	private void addTags(SharedConfig sharedConfig, Long gameId, Options taggerOptions, Set<String> externalTags) {
 		Set<String> existingTags=sharedConfig.getTags(gameId);
-
+		
 		if (null!=taggerOptions.getWhiteList()&&!taggerOptions.getWhiteList().isEmpty()) {
 			externalTags.retainAll(taggerOptions.getWhiteList());
 		}
