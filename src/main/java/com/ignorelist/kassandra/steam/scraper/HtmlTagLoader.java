@@ -11,6 +11,7 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.cache.CacheLoader;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.SetMultimap;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -90,23 +91,24 @@ public class HtmlTagLoader implements TagLoader {
 
 					Elements headerImageElements=document.select("img.game_header_image_full");
 					gameInfo.setHeaderImage(getSrcUri(headerImageElements));
+					final SetMultimap<TagType, String> tags=gameInfo.getTags();
 
 					if (types.contains(TagType.CATEGORY)) {
 						Elements categories=document.select("div#category_block a.name");
-						copyText(categories, gameInfo.getTags().get(TagType.CATEGORY));
+						copyText(categories, tags.get(TagType.CATEGORY));
 					}
 					if (types.contains(TagType.GENRE)) {
 						Elements genres=document.select("div.details_block a[href*=/genre/]");
-						copyText(genres, gameInfo.getTags().get(TagType.GENRE));
+						copyText(genres, tags.get(TagType.GENRE));
 					}
 					if (types.contains(TagType.USER)) {
 						Elements userTags=document.select("a.app_tag");
-						copyText(Iterables.filter(userTags, Predicates.not(DISPLAY_NONE_PREDICATE)), gameInfo.getTags().get(TagType.USER));
-						copyText(Iterables.filter(userTags, DISPLAY_NONE_PREDICATE), gameInfo.getTags().get(TagType.USER_HIDDEN));
+						copyText(Iterables.filter(userTags, Predicates.not(DISPLAY_NONE_PREDICATE)), tags.get(TagType.USER));
+						copyText(Iterables.filter(userTags, DISPLAY_NONE_PREDICATE), tags.get(TagType.USER_HIDDEN));
 					}
 					if (types.contains(TagType.VR)) {
 						Elements vrSupport=document.select("div.game_area_details_specs a.name[href*=#vrsupport=");
-						copyText(vrSupport, gameInfo.getTags().get(TagType.VR));
+						copyText(vrSupport, tags.get(TagType.VR));
 					}
 				} finally {
 					IOUtils.closeQuietly(inputStream);
