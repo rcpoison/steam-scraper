@@ -161,8 +161,9 @@ public class TaggerCli {
 			configuration.setWhiteList(whiteListFile);
 		}
 
-		final boolean removeNotWhiteListed=commandLine.hasOption("I");
-		configuration.setRemoveNotWhiteListed(removeNotWhiteListed);
+		if (commandLine.hasOption("I")) {
+			configuration.setRemoveNotWhiteListed(true);
+		}
 
 		if (commandLine.hasOption("c")||commandLine.hasOption("g")||commandLine.hasOption("u")) {
 			Set<TagType> tagTypes=new HashSet<>();

@@ -58,6 +58,8 @@ public class Tagger {
 
 			taggerOptions.setTagTypes(EnumSet.copyOf(configuration.getTagTypes()));
 
+			taggerOptions.setRemoveNotWhiteListed(null==configuration.getRemoveNotWhiteListed() ? false : configuration.getRemoveNotWhiteListed());
+
 			return taggerOptions;
 		}
 
