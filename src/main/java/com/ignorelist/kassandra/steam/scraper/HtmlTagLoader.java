@@ -6,6 +6,8 @@
 package com.ignorelist.kassandra.steam.scraper;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.cache.CacheLoader;
 import com.google.common.collect.Iterables;
@@ -21,6 +23,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -28,6 +31,19 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class HtmlTagLoader implements TagLoader {
+
+	private static final Pattern DISPLAY_NONE=Pattern.compile("display\\s*:\\s*none", Pattern.CASE_INSENSITIVE);
+	private static final Predicate<Element> DISPLAY_NONE_PREDICATE=new Predicate<Element>() {
+
+		@Override
+		public boolean apply(Element input) {
+			String style=input.attr("style");
+			if (Strings.isNullOrEmpty(style)) {
+				return false;
+			}
+			return DISPLAY_NONE.matcher(style).lookingAt();
+		}
+	};
 
 	private final FileCache cache;
 
@@ -85,7 +101,8 @@ public class HtmlTagLoader implements TagLoader {
 					}
 					if (types.contains(TagType.USER)) {
 						Elements userTags=document.select("a.app_tag");
-						copyText(userTags, gameInfo.getTags().get(TagType.USER));
+						copyText(Iterables.filter(userTags, Predicates.not(DISPLAY_NONE_PREDICATE)), gameInfo.getTags().get(TagType.USER));
+						copyText(Iterables.filter(userTags, DISPLAY_NONE_PREDICATE), gameInfo.getTags().get(TagType.USER_HIDDEN));
 					}
 					if (types.contains(TagType.VR)) {
 						Elements vrSupport=document.select("div.game_area_details_specs a.name[href*=#vrsupport=");
@@ -121,7 +138,7 @@ public class HtmlTagLoader implements TagLoader {
 		}
 	}
 
-	private static void copyText(Elements elements, Set<String> target) {
+	private static void copyText(Iterable<Element> elements, Set<String> target) {
 		for (Element element : elements) {
 			final String text=element.text();
 			if (!Strings.isNullOrEmpty(text)) {
