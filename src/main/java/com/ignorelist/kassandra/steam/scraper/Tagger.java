@@ -174,7 +174,7 @@ public class Tagger {
 		availableGameIds.addAll(LibraryScanner.findGames(pathResolver.findAllLibraryDirectories()));
 		Map<Long, GameInfo> availableTags=tagLoader.load(availableGameIds, taggerOptions.getTagTypes());
 
-		for (Long gameId : availableGameIds) {
+		for (Long gameId : availableTags.keySet()) {
 			addTags(sharedConfig, gameId, taggerOptions, availableTags.get(gameId).getAllTags(taggerOptions.getTagTypes()));
 		}
 		return sharedConfig.getRootNode();
