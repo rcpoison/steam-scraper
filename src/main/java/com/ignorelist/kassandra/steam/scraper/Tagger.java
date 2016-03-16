@@ -157,7 +157,6 @@ public class Tagger {
 	public VdfRoot tag(Path path, Options taggerOptions) throws IOException, RecognitionException {
 		SharedConfig sharedConfig=new SharedConfig(path);
 		Set<Long> availableGameIds=new HashSet<>();
-		SetMultimap<Long, String> gameTags=HashMultimap.create();
 
 		for (Map.Entry<Long, VdfNode> entry : sharedConfig.getGameNodeMap().entrySet()) {
 			try {
@@ -172,6 +171,7 @@ public class Tagger {
 		// vdf doesn't contain all games, add the rest (at least the installed games)
 		PathResolver pathResolver=new PathResolver();
 		availableGameIds.addAll(LibraryScanner.findGames(pathResolver.findAllLibraryDirectories()));
+		
 		Map<Long, GameInfo> availableTags=tagLoader.load(availableGameIds, taggerOptions.getTagTypes());
 
 		for (Long gameId : availableTags.keySet()) {
