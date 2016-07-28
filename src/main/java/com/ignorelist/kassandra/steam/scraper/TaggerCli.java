@@ -59,7 +59,16 @@ public class TaggerCli {
 	public static void main(String[] args) throws IOException, RecognitionException, ParseException {
 		Options options=buildOptions();
 		CommandLineParser parser=new DefaultParser();
-		CommandLine commandLine=parser.parse(options, args);
+		CommandLine commandLine;
+		try {
+			commandLine=parser.parse(options, args);
+		} catch (ParseException pe) {
+			System.out.println(pe.getMessage());
+			System.out.println();
+			printHelp(options);
+			System.exit(0);
+			return;
+		}
 		if (commandLine.hasOption("h")) {
 			printHelp(options);
 			System.exit(0);
@@ -214,7 +223,7 @@ public class TaggerCli {
 
 	private static void printHelp(Options options) throws RecognitionException, IOException {
 		HelpFormatter formatter=new HelpFormatter();
-		formatter.printHelp("java -jar steam-scraper-*.one-jar.jar", options);
+		formatter.printHelp("steam-scraper", options);
 		PathResolver pathResolver=new PathResolver();
 		System.out.println("\nlibrary directories:\n"+Joiner.on("\n").join(pathResolver.findAllLibraryDirectories()));
 		System.out.println("\nsharedconfig files:\n"+Joiner.on("\n").join(pathResolver.findSharedConfig()));
