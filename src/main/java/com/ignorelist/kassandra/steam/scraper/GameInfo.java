@@ -11,6 +11,7 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import java.io.Serializable;
 import java.net.URI;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
@@ -85,6 +86,18 @@ public class GameInfo implements Iterable<String>, Serializable {
 
 	public Set<String> getAllTags() {
 		return Sets.newHashSet(this);
+	}
+
+	public Set<String> getAllTags(Set<TagType> tagTypes) {
+		SetMultimap<TagType, String> t=getTags();
+		Set<String> result=new HashSet<>();
+		for (TagType tagType : tagTypes) {
+			result.addAll(t.get(tagType));
+			if (TagType.USER==tagType) {
+				result.addAll(t.get(TagType.USER_HIDDEN));
+			}
+		}
+		return result;
 	}
 
 	@Override

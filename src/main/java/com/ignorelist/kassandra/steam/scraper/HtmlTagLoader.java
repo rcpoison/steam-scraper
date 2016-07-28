@@ -6,9 +6,12 @@
 package com.ignorelist.kassandra.steam.scraper;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.cache.CacheLoader;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.SetMultimap;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -21,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -28,6 +32,19 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class HtmlTagLoader implements TagLoader {
+
+	private static final Pattern DISPLAY_NONE=Pattern.compile("display\\s*:\\s*none", Pattern.CASE_INSENSITIVE);
+	private static final Predicate<Element> DISPLAY_NONE_PREDICATE=new Predicate<Element>() {
+
+		@Override
+		public boolean apply(Element input) {
+			String style=input.attr("style");
+			if (Strings.isNullOrEmpty(style)) {
+				return false;
+			}
+			return DISPLAY_NONE.matcher(style).lookingAt();
+		}
+	};
 
 	private final FileCache cache;
 
@@ -74,22 +91,24 @@ public class HtmlTagLoader implements TagLoader {
 
 					Elements headerImageElements=document.select("img.game_header_image_full");
 					gameInfo.setHeaderImage(getSrcUri(headerImageElements));
+					final SetMultimap<TagType, String> tags=gameInfo.getTags();
 
 					if (types.contains(TagType.CATEGORY)) {
 						Elements categories=document.select("div#category_block a.name");
-						copyText(categories, gameInfo.getTags().get(TagType.CATEGORY));
+						copyText(categories, tags.get(TagType.CATEGORY));
 					}
 					if (types.contains(TagType.GENRE)) {
 						Elements genres=document.select("div.details_block a[href*=/genre/]");
-						copyText(genres, gameInfo.getTags().get(TagType.GENRE));
+						copyText(genres, tags.get(TagType.GENRE));
 					}
 					if (types.contains(TagType.USER)) {
 						Elements userTags=document.select("a.app_tag");
-						copyText(userTags, gameInfo.getTags().get(TagType.USER));
+						copyText(Iterables.filter(userTags, Predicates.not(DISPLAY_NONE_PREDICATE)), tags.get(TagType.USER));
+						copyText(Iterables.filter(userTags, DISPLAY_NONE_PREDICATE), tags.get(TagType.USER_HIDDEN));
 					}
 					if (types.contains(TagType.VR)) {
 						Elements vrSupport=document.select("div.game_area_details_specs a.name[href*=#vrsupport=");
-						copyText(vrSupport, gameInfo.getTags().get(TagType.VR));
+						copyText(vrSupport, tags.get(TagType.VR));
 					}
 				} finally {
 					IOUtils.closeQuietly(inputStream);
@@ -121,7 +140,7 @@ public class HtmlTagLoader implements TagLoader {
 		}
 	}
 
-	private static void copyText(Elements elements, Set<String> target) {
+	private static void copyText(Iterable<Element> elements, Set<String> target) {
 		for (Element element : elements) {
 			final String text=element.text();
 			if (!Strings.isNullOrEmpty(text)) {
