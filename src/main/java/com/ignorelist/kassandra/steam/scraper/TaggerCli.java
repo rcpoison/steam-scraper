@@ -114,7 +114,7 @@ public class TaggerCli {
 
 		final HtmlTagLoader htmlTagLoader=new HtmlTagLoader(pathResolver.findCachePath("html"), null==configuration.getCacheExpiryDays() ? 7 : configuration.getCacheExpiryDays());
 		final BatchTagLoader tagLoader=new BatchTagLoader(htmlTagLoader, configuration.getDownloadThreads());
-		if (commandLine.hasOption("v")) {
+		if (true||commandLine.hasOption("v")) {
 			tagLoader.registerEventListener(new CliEventLoggerLoaded());
 		}
 		Tagger tagger=new Tagger(tagLoader);
