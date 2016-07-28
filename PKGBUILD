@@ -20,9 +20,7 @@ pkgver() {
 
 build() {
 	cd "${srcdir}/${_pkgname}"
-	mvn clean install
-	cp "${_pkgname}.sh" "${_pkgname}"
-	cat target/steam-scraper-*.one-jar.jar >> "${_pkgname}"
+	./build.sh
 }
 
 package() {
