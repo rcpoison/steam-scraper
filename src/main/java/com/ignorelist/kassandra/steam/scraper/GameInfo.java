@@ -93,6 +93,9 @@ public class GameInfo implements Iterable<String>, Serializable {
 		Set<String> result=new HashSet<>();
 		for (TagType tagType : tagTypes) {
 			result.addAll(t.get(tagType));
+			if (TagType.USER==tagType) {
+				result.addAll(t.get(TagType.USER_HIDDEN));
+			}
 		}
 		return result;
 	}
