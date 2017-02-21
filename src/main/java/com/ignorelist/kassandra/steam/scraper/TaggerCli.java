@@ -39,7 +39,7 @@ public class TaggerCli {
 
 	private static final ImmutableSet<PosixFilePermission> SHARED_CONFIG_POSIX_PERMS=ImmutableSet.of(
 			PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE, PosixFilePermission.OWNER_EXECUTE,
-			PosixFilePermission.GROUP_READ, PosixFilePermission.GROUP_WRITE, PosixFilePermission.GROUP_EXECUTE,
+			PosixFilePermission.GROUP_READ, PosixFilePermission.GROUP_EXECUTE,
 			PosixFilePermission.OTHERS_READ, PosixFilePermission.OTHERS_EXECUTE);
 
 	static class CliEventLoggerLoaded {
@@ -59,7 +59,16 @@ public class TaggerCli {
 	public static void main(String[] args) throws IOException, RecognitionException, ParseException {
 		Options options=buildOptions();
 		CommandLineParser parser=new DefaultParser();
-		CommandLine commandLine=parser.parse(options, args);
+		CommandLine commandLine;
+		try {
+			commandLine=parser.parse(options, args);
+		} catch (ParseException pe) {
+			System.out.println(pe.getMessage());
+			System.out.println();
+			printHelp(options);
+			System.exit(0);
+			return;
+		}
 		if (commandLine.hasOption("h")) {
 			printHelp(options);
 			System.exit(0);
@@ -105,7 +114,7 @@ public class TaggerCli {
 
 		final HtmlTagLoader htmlTagLoader=new HtmlTagLoader(pathResolver.findCachePath("html"), null==configuration.getCacheExpiryDays() ? 7 : configuration.getCacheExpiryDays());
 		final BatchTagLoader tagLoader=new BatchTagLoader(htmlTagLoader, configuration.getDownloadThreads());
-		if (commandLine.hasOption("v")) {
+		if (true||commandLine.hasOption("v")) {
 			tagLoader.registerEventListener(new CliEventLoggerLoaded());
 		}
 		Tagger tagger=new Tagger(tagLoader);
@@ -161,8 +170,9 @@ public class TaggerCli {
 			configuration.setWhiteList(whiteListFile);
 		}
 
-		final boolean removeNotWhiteListed=commandLine.hasOption("I");
-		configuration.setRemoveNotWhiteListed(removeNotWhiteListed);
+		if (commandLine.hasOption("I")) {
+			configuration.setRemoveNotWhiteListed(true);
+		}
 
 		if (commandLine.hasOption("c")||commandLine.hasOption("g")||commandLine.hasOption("u")) {
 			Set<TagType> tagTypes=new HashSet<>();
@@ -213,7 +223,7 @@ public class TaggerCli {
 
 	private static void printHelp(Options options) throws RecognitionException, IOException {
 		HelpFormatter formatter=new HelpFormatter();
-		formatter.printHelp("java -jar steam-scraper-*.one-jar.jar", options);
+		formatter.printHelp("steam-scraper", options);
 		PathResolver pathResolver=new PathResolver();
 		System.out.println("\nlibrary directories:\n"+Joiner.on("\n").join(pathResolver.findAllLibraryDirectories()));
 		System.out.println("\nsharedconfig files:\n"+Joiner.on("\n").join(pathResolver.findSharedConfig()));

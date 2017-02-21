@@ -86,6 +86,7 @@
 							<attachToBuild>true</attachToBuild>
 							Optional, default is "onejar" 
 							<classifier>onejar</classifier>
+							<filename>steam-scraper.jar</filename>
 						</configuration>
 						<goals>
 							<goal>one-jar</goal>

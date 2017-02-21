@@ -58,6 +58,8 @@ public class Tagger {
 
 			taggerOptions.setTagTypes(EnumSet.copyOf(configuration.getTagTypes()));
 
+			taggerOptions.setRemoveNotWhiteListed(null==configuration.getRemoveNotWhiteListed() ? false : configuration.getRemoveNotWhiteListed());
+
 			return taggerOptions;
 		}
 
@@ -155,7 +157,6 @@ public class Tagger {
 	public VdfRoot tag(Path path, Options taggerOptions) throws IOException, RecognitionException {
 		SharedConfig sharedConfig=new SharedConfig(path);
 		Set<Long> availableGameIds=new HashSet<>();
-		SetMultimap<Long, String> gameTags=HashMultimap.create();
 
 		for (Map.Entry<Long, VdfNode> entry : sharedConfig.getGameNodeMap().entrySet()) {
 			try {
@@ -170,27 +171,24 @@ public class Tagger {
 		// vdf doesn't contain all games, add the rest (at least the installed games)
 		PathResolver pathResolver=new PathResolver();
 		availableGameIds.addAll(LibraryScanner.findGames(pathResolver.findAllLibraryDirectories()));
+		
 		Map<Long, GameInfo> availableTags=tagLoader.load(availableGameIds, taggerOptions.getTagTypes());
 
-		for (Long gameId : availableGameIds) {
-			addTags(sharedConfig, gameId, taggerOptions, availableTags.get(gameId).getAllTags());
+		for (Long gameId : availableTags.keySet()) {
+			addTags(sharedConfig, gameId, taggerOptions, availableTags.get(gameId).getAllTags(taggerOptions.getTagTypes()));
 		}
 		return sharedConfig.getRootNode();
 	}
 
 	private void addTags(SharedConfig sharedConfig, Long gameId, Options taggerOptions, Set<String> externalTags) {
 		Set<String> existingTags=sharedConfig.getTags(gameId);
-
+		
 		if (null!=taggerOptions.getWhiteList()&&!taggerOptions.getWhiteList().isEmpty()) {
 			externalTags.retainAll(taggerOptions.getWhiteList());
 		}
+
 		existingTags.addAll(externalTags);
-		if (null!=taggerOptions.getRemoveTags()) {
-			existingTags.removeAll(taggerOptions.getRemoveTags());
-		}
-		if (null!=taggerOptions.getWhiteList()&&!taggerOptions.getWhiteList().isEmpty()&&taggerOptions.isRemoveNotWhiteListed()) {
-			existingTags.retainAll(taggerOptions.getWhiteList());
-		}
+
 		if (null!=taggerOptions.getReplacementMap()) {
 			for (Map.Entry<String, String> e : taggerOptions.getReplacementMap().entrySet()) {
 				if (existingTags.remove(e.getKey())) {
@@ -198,6 +196,14 @@ public class Tagger {
 				}
 			}
 		}
+
+		if (null!=taggerOptions.getRemoveTags()) {
+			existingTags.removeAll(taggerOptions.getRemoveTags());
+		}
+		if (null!=taggerOptions.getWhiteList()&&!taggerOptions.getWhiteList().isEmpty()&&taggerOptions.isRemoveNotWhiteListed()) {
+			existingTags.retainAll(taggerOptions.getWhiteList());
+		}
+
 		sharedConfig.setTags(gameId, existingTags);
 	}
 
