@@ -10,6 +10,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.cache.CacheLoader;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
 import java.io.IOException;
@@ -19,6 +20,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -45,6 +47,9 @@ public class HtmlTagLoader implements TagLoader {
 			return DISPLAY_NONE.matcher(style).lookingAt();
 		}
 	};
+	private static final ImmutableMap<String, String> URL_REPLACE=ImmutableMap.<String, String>builder()
+			.put("%CDN_HOST_MEDIA%", "steamcdn-a.akamaihd.net")
+			.build();
 
 	private final FileCache cache;
 
@@ -128,11 +133,14 @@ public class HtmlTagLoader implements TagLoader {
 		if (null==first) {
 			return null;
 		}
-		final String srcString=first.attr("src");
+		String srcString=first.attr("src");
 		if (null==srcString) {
 			return null;
 		}
 		try {
+			for (Map.Entry<String, String> replacement : URL_REPLACE.entrySet()) {
+				srcString=srcString.replace(replacement.getKey(), replacement.getValue());
+			}
 			return new URI(srcString);
 		} catch (URISyntaxException ex) {
 			Logger.getLogger(HtmlTagLoader.class.getName()).log(Level.SEVERE, null, ex);
