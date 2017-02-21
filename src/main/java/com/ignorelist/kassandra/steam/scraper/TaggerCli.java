@@ -39,7 +39,7 @@ public class TaggerCli {
 
 	private static final ImmutableSet<PosixFilePermission> SHARED_CONFIG_POSIX_PERMS=ImmutableSet.of(
 			PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE, PosixFilePermission.OWNER_EXECUTE,
-			PosixFilePermission.GROUP_READ, PosixFilePermission.GROUP_WRITE, PosixFilePermission.GROUP_EXECUTE,
+			PosixFilePermission.GROUP_READ, PosixFilePermission.GROUP_EXECUTE,
 			PosixFilePermission.OTHERS_READ, PosixFilePermission.OTHERS_EXECUTE);
 
 	static class CliEventLoggerLoaded {
