@@ -68,7 +68,7 @@ public class HtmlTagLoader implements TagLoader {
 	}
 
 	private static String buildPageUrl(String k) {
-		return "http://store.steampowered.com/app/"+k;
+		return "https://store.steampowered.com/app/"+k;
 	}
 
 	private static String buildPageUrl(Long k) {
