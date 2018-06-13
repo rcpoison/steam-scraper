@@ -48,6 +48,7 @@ public class HtmlTagLoader implements TagLoader {
 		}
 	};
 	private static final ImmutableMap<String, String> URL_REPLACE=ImmutableMap.<String, String>builder()
+			.put("%CDN_HOST_MEDIA_SSL%", "steamcdn-a.akamaihd.net")
 			.put("%CDN_HOST_MEDIA%", "steamcdn-a.akamaihd.net")
 			.build();
 
