@@ -33,6 +33,7 @@ import org.apache.commons.io.IOUtils;
  *
  * @author poison
  */
+@Deprecated
 public class JsonApiTagLoader implements TagLoader {
 
 	private final FileCache cache;
