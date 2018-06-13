@@ -77,24 +77,22 @@ public class HtmlTagLoader implements TagLoader {
 
 	@Override
 	public GameInfo load(Long gameId, EnumSet<TagType> types) {
-		GameInfo gameInfo=new GameInfo();
-		gameInfo.setId(gameId);
 		try {
 			if (!types.isEmpty()) {
 				try (InputStream inputStream=cache.get(gameId.toString())) {
-					parseHtml(inputStream, gameId, gameInfo, types);
+					return parseHtml(inputStream, gameId, types);
 				}
 			}
-		} catch (ExecutionException ex) {
-			Logger.getLogger(HtmlTagLoader.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (IOException ex) {
+		} catch (ExecutionException|IOException ex) {
 			Logger.getLogger(HtmlTagLoader.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
-		return gameInfo;
+		return new GameInfo(gameId);
 	}
 
-	static void parseHtml(final InputStream inputStream, Long gameId, GameInfo gameInfo, EnumSet<TagType> types) throws IOException {
+	static GameInfo parseHtml(final InputStream inputStream, Long gameId, EnumSet<TagType> types) throws IOException {
+		GameInfo gameInfo=new GameInfo(gameId);
+
 		Document document=Jsoup.parse(inputStream, Charsets.UTF_8.name(), buildPageUrl(gameId));
 
 		Elements appName=document.select("div.apphub_AppName");
@@ -124,9 +122,10 @@ public class HtmlTagLoader implements TagLoader {
 			copyText(Iterables.filter(userTags, DISPLAY_NONE_PREDICATE), tags.get(TagType.USER_HIDDEN));
 		}
 		if (types.contains(TagType.VR)) {
-			Elements vrSupport=document.select("div.game_area_details_specs a.name[href*=#vrsupport=");
+			Elements vrSupport=document.select("div.game_area_details_specs a.name[href*=#vrsupport]");
 			copyText(vrSupport, tags.get(TagType.VR));
 		}
+		return gameInfo;
 	}
 
 	private static URI getSrcUri(Elements elements) {
