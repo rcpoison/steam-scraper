@@ -120,7 +120,7 @@ public class HtmlTagLoader implements TagLoader {
 			copyText(Iterables.filter(userTags, DISPLAY_NONE_PREDICATE), tags.get(TagType.USER_HIDDEN));
 		}
 		if (types.contains(TagType.VR)) {
-			Elements vrSupport=document.select("div.game_area_details_specs a.name[href*=#vrsupport]");
+			Elements vrSupport=document.select("div.game_area_details_specs a.name[href*=vrsupport=]");
 			copyText(vrSupport, tags.get(TagType.VR));
 		}
 		return gameInfo;
