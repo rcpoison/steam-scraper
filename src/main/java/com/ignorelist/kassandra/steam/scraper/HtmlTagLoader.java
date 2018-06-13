@@ -81,8 +81,7 @@ public class HtmlTagLoader implements TagLoader {
 		gameInfo.setId(gameId);
 		try {
 			if (!types.isEmpty()) {
-				InputStream inputStream=cache.get(gameId.toString());
-				try {
+				try (InputStream inputStream=cache.get(gameId.toString())) {
 					Document document=Jsoup.parse(inputStream, Charsets.UTF_8.name(), buildPageUrl(gameId));
 
 					Elements appName=document.select("div.apphub_AppName");
@@ -115,8 +114,6 @@ public class HtmlTagLoader implements TagLoader {
 						Elements vrSupport=document.select("div.game_area_details_specs a.name[href*=#vrsupport=");
 						copyText(vrSupport, tags.get(TagType.VR));
 					}
-				} finally {
-					IOUtils.closeQuietly(inputStream);
 				}
 			}
 		} catch (ExecutionException ex) {
