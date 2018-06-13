@@ -71,7 +71,7 @@ public class HtmlTagLoader implements TagLoader {
 		return "https://store.steampowered.com/app/"+k;
 	}
 
-	private static String buildPageUrl(Long k) {
+	static String buildPageUrl(Long k) {
 		return buildPageUrl(k.toString());
 	}
 
@@ -94,7 +94,7 @@ public class HtmlTagLoader implements TagLoader {
 		return gameInfo;
 	}
 
-	private void parseHtml(final InputStream inputStream, Long gameId, GameInfo gameInfo, EnumSet<TagType> types) throws IOException {
+	static void parseHtml(final InputStream inputStream, Long gameId, GameInfo gameInfo, EnumSet<TagType> types) throws IOException {
 		Document document=Jsoup.parse(inputStream, Charsets.UTF_8.name(), buildPageUrl(gameId));
 
 		Elements appName=document.select("div.apphub_AppName");
