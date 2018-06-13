@@ -82,38 +82,7 @@ public class HtmlTagLoader implements TagLoader {
 		try {
 			if (!types.isEmpty()) {
 				try (InputStream inputStream=cache.get(gameId.toString())) {
-					Document document=Jsoup.parse(inputStream, Charsets.UTF_8.name(), buildPageUrl(gameId));
-
-					Elements appName=document.select("div.apphub_AppName");
-					Element nameElement=Iterables.getFirst(appName, null);
-					if (null!=nameElement&&null!=nameElement.text()) {
-						gameInfo.setName(nameElement.text().trim());
-					}
-
-					Elements appIconElements=document.select("div.apphub_AppIcon img");
-					gameInfo.setIcon(getSrcUri(appIconElements));
-
-					Elements headerImageElements=document.select("img.game_header_image_full");
-					gameInfo.setHeaderImage(getSrcUri(headerImageElements));
-					final SetMultimap<TagType, String> tags=gameInfo.getTags();
-
-					if (types.contains(TagType.CATEGORY)) {
-						Elements categories=document.select("div#category_block a.name");
-						copyText(categories, tags.get(TagType.CATEGORY));
-					}
-					if (types.contains(TagType.GENRE)) {
-						Elements genres=document.select("div.details_block a[href*=/genre/]");
-						copyText(genres, tags.get(TagType.GENRE));
-					}
-					if (types.contains(TagType.USER)) {
-						Elements userTags=document.select("a.app_tag");
-						copyText(Iterables.filter(userTags, Predicates.not(DISPLAY_NONE_PREDICATE)), tags.get(TagType.USER));
-						copyText(Iterables.filter(userTags, DISPLAY_NONE_PREDICATE), tags.get(TagType.USER_HIDDEN));
-					}
-					if (types.contains(TagType.VR)) {
-						Elements vrSupport=document.select("div.game_area_details_specs a.name[href*=#vrsupport=");
-						copyText(vrSupport, tags.get(TagType.VR));
-					}
+					parseHtml(inputStream, gameId, gameInfo, types);
 				}
 			}
 		} catch (ExecutionException ex) {
@@ -123,6 +92,41 @@ public class HtmlTagLoader implements TagLoader {
 		}
 
 		return gameInfo;
+	}
+
+	private void parseHtml(final InputStream inputStream, Long gameId, GameInfo gameInfo, EnumSet<TagType> types) throws IOException {
+		Document document=Jsoup.parse(inputStream, Charsets.UTF_8.name(), buildPageUrl(gameId));
+
+		Elements appName=document.select("div.apphub_AppName");
+		Element nameElement=Iterables.getFirst(appName, null);
+		if (null!=nameElement&&null!=nameElement.text()) {
+			gameInfo.setName(nameElement.text().trim());
+		}
+
+		Elements appIconElements=document.select("div.apphub_AppIcon img");
+		gameInfo.setIcon(getSrcUri(appIconElements));
+
+		Elements headerImageElements=document.select("img.game_header_image_full");
+		gameInfo.setHeaderImage(getSrcUri(headerImageElements));
+		final SetMultimap<TagType, String> tags=gameInfo.getTags();
+
+		if (types.contains(TagType.CATEGORY)) {
+			Elements categories=document.select("div#category_block a.name");
+			copyText(categories, tags.get(TagType.CATEGORY));
+		}
+		if (types.contains(TagType.GENRE)) {
+			Elements genres=document.select("div.details_block a[href*=/genre/]");
+			copyText(genres, tags.get(TagType.GENRE));
+		}
+		if (types.contains(TagType.USER)) {
+			Elements userTags=document.select("a.app_tag");
+			copyText(Iterables.filter(userTags, Predicates.not(DISPLAY_NONE_PREDICATE)), tags.get(TagType.USER));
+			copyText(Iterables.filter(userTags, DISPLAY_NONE_PREDICATE), tags.get(TagType.USER_HIDDEN));
+		}
+		if (types.contains(TagType.VR)) {
+			Elements vrSupport=document.select("div.game_area_details_specs a.name[href*=#vrsupport=");
+			copyText(vrSupport, tags.get(TagType.VR));
+		}
 	}
 
 	private static URI getSrcUri(Elements elements) {
