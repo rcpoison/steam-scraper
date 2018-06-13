@@ -77,14 +77,12 @@ public class HtmlTagLoader implements TagLoader {
 
 	@Override
 	public GameInfo load(Long gameId, EnumSet<TagType> types) {
-		try {
-			if (!types.isEmpty()) {
-				try (InputStream inputStream=cache.get(gameId.toString())) {
-					return parseHtml(inputStream, gameId, types);
-				}
+		if (!types.isEmpty()) {
+			try (InputStream inputStream=cache.get(gameId.toString())) {
+				return parseHtml(inputStream, gameId, types);
+			} catch (ExecutionException|IOException ex) {
+				Logger.getLogger(HtmlTagLoader.class.getName()).log(Level.SEVERE, null, ex);
 			}
-		} catch (ExecutionException|IOException ex) {
-			Logger.getLogger(HtmlTagLoader.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
 		return new GameInfo(gameId);
