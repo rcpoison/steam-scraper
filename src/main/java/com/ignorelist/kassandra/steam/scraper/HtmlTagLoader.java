@@ -13,6 +13,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -27,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -148,12 +148,12 @@ public class HtmlTagLoader implements TagLoader {
 	}
 
 	private static void copyText(Iterable<Element> elements, Set<String> target) {
-		for (Element element : elements) {
-			final String text=element.text();
-			if (!Strings.isNullOrEmpty(text)) {
-				target.add(text.trim());
-			}
-		}
+		Streams.stream(elements)
+				.map(Element::text)
+				.filter(Predicates.notNull())
+				.map(String::trim)
+				.filter(Predicates.not(String::isEmpty))
+				.forEachOrdered(target::add);
 	}
 
 }
