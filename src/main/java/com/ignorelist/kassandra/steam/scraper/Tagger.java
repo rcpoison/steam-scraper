@@ -25,7 +25,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.antlr.runtime.RecognitionException;
-import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -72,14 +71,11 @@ public class Tagger {
 		}
 
 		private static Map<String, String> readReplacements(Path replacementFile) throws IOException {
-			final Reader replacementFileReader=Files.newBufferedReader(replacementFile, Charsets.UTF_8);
-			try {
+			try (final Reader replacementFileReader=Files.newBufferedReader(replacementFile, Charsets.UTF_8)) {
 				Properties replacementProperties=new Properties();
 				replacementProperties.load(replacementFileReader);
 				Map<String, String> replacementMap=Maps.fromProperties(replacementProperties);
 				return replacementMap;
-			} finally {
-				IOUtils.closeQuietly(replacementFileReader);
 			}
 		}
 
