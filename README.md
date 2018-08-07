@@ -38,11 +38,12 @@ steam-scraper --remove "Steam Achievements" "Steam Trading Cards" "Steam Cloud" 
 ```
 
 
-Build Whitelist:
+Build whitelist:
 ```
 steam-scraper -u -p > whitelist.txt
 ```
-Now edit the whitelist.txt with your sacred editor of choice and run:
+Will write a file which contains all available tags.
+Now edit the whitelist.txt with your sacred editor of choice, remove the tags you do not want and run:
 ```
 steam-scraper -u -i whitelist.txt -w
 ```
@@ -88,13 +89,14 @@ cacheExpiryDays=7
 
 
 ## Build dependencies
+* sh
 * maven 3
 * openjdk 8
 
 ### Building
-```mvn clean install```
+```./build.sh```
 
-Binaries will be in the `target` directory
+Binary called ```steam-scraper``` will be in the project directory.
 
 
 ## Donation
