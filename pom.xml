@@ -41,7 +41,7 @@
 		<dependency>
 			<groupId>com.technofovea</groupId>
 			<artifactId>hl2parse-parsers</artifactId>
-			<version>1.2.1</version>
+			<version>1.2.2-rcpoison-java8</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-cli</groupId>
@@ -99,9 +99,12 @@
 	</build>
 	<repositories>
 		<repository>
-			<id>dhager-github</id>
-			<name>DHager's Github Maven Repository</name>
-			<url>http://dhager.github.com/mvn-repo/releases</url>
+			<id>rcpoison-github</id>
+			<name>my temp repo</name>
+			<url>https://raw.githubusercontent.com/rcpoison/hl2parse/mvn-repo/mvn-repo/</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
 		</repository>
 	</repositories>
 	<pluginRepositories>
