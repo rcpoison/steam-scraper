@@ -80,23 +80,18 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>com.jolira</groupId>
-				<artifactId>onejar-maven-plugin</artifactId>
-				<version>1.4.4</version>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>2.0.3.RELEASE</version>
 				<executions>
 					<execution>
-						<configuration>
-							Optional 
-							<onejarVersion>0.97</onejarVersion>
-							Optional, default is false 
-							<attachToBuild>true</attachToBuild>
-							Optional, default is "onejar" 
-							<classifier>onejar</classifier>
-							<filename>steam-scraper.jar</filename>
-						</configuration>
 						<goals>
-							<goal>one-jar</goal>
+							<goal>repackage</goal>
 						</goals>
+						<configuration>
+							<classifier>boot</classifier>
+							<mainClass>com.ignorelist.kassandra.steam.scraper.TaggerCli</mainClass>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
