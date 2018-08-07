@@ -6,12 +6,9 @@
 package com.ignorelist.kassandra.steam.scraper;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Predicate;
-import com.google.common.collect.HashMultimap;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Sets;
 import com.technofovea.hl2parse.vdf.VdfNode;
 import com.technofovea.hl2parse.vdf.VdfRoot;
 import java.io.IOException;
@@ -26,8 +23,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.antlr.runtime.RecognitionException;
-import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -64,23 +61,21 @@ public class Tagger {
 		}
 
 		private static Set<String> readWhiteList(Path whiteListFile) throws IOException {
-			return Sets.newHashSet(Iterables.filter(Files.readAllLines(whiteListFile, Charsets.UTF_8), new Predicate<String>() {
-				@Override
-				public boolean apply(String input) {
-					return null!=input&&input.length()>0&&!input.startsWith("#");
-				}
-			}));
+			return com.google.common.io.Files.asCharSource(whiteListFile.toFile(), Charsets.UTF_8)
+					.lines()
+					.filter(Predicates.notNull())
+					.map(String::trim)
+					.filter(s -> !s.isEmpty())
+					.filter(s -> !s.startsWith("#"))
+					.collect(Collectors.toCollection(HashSet::new));
 		}
 
 		private static Map<String, String> readReplacements(Path replacementFile) throws IOException {
-			final Reader replacementFileReader=Files.newBufferedReader(replacementFile, Charsets.UTF_8);
-			try {
+			try (final Reader replacementFileReader=Files.newBufferedReader(replacementFile, Charsets.UTF_8)) {
 				Properties replacementProperties=new Properties();
 				replacementProperties.load(replacementFileReader);
 				Map<String, String> replacementMap=Maps.fromProperties(replacementProperties);
 				return replacementMap;
-			} finally {
-				IOUtils.closeQuietly(replacementFileReader);
 			}
 		}
 

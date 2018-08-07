@@ -6,11 +6,11 @@ Scrapes categories/genres/user tags from the Steam shop API/store pages and adds
 
 ## Usage
 
-Shop API is rate limited and suffers from non-deterministic failures, run the script multiple times to gather more data.
+
 Please exit steam before running.
 
 ```
-usage: java -jar steam-scraper-*.one-jar.jar
+usage: steam-scraper
  -c                       don't add categories
  -f <file>                absolute path to sharedconfig.vdf to use
  -g                       don't add genres
@@ -34,21 +34,22 @@ usage: java -jar steam-scraper-*.one-jar.jar
 Remove silly tags and overwrite sharedconfig.vdf directly (might want to quit steam first)
 
 ```
-java -jar steam-scraper-*.one-jar.jar --remove "Steam Achievements" "Steam Trading Cards" "Steam Cloud" "Steam Leaderboards" "Valve Anti-Cheat enabled" "Steam Workshop" "Includes Source SDK" "Commentary available" "Captions available" "Stats" -w
+steam-scraper --remove "Steam Achievements" "Steam Trading Cards" "Steam Cloud" "Steam Leaderboards" "Valve Anti-Cheat enabled" "Steam Workshop" "Includes Source SDK" "Commentary available" "Captions available" "Stats" -w
 ```
 
 
-Build Whitelist:
+Build whitelist:
 ```
-java -jar steam-scraper-*.one-jar.jar -u -p > whitelist.txt
+steam-scraper -u -p > whitelist.txt
 ```
-Now edit the whitelist.txt with your sacred editor of choice and run:
+Will write a file which contains all available tags.
+Now edit the whitelist.txt with your sacred editor of choice, remove the tags you do not want and run:
 ```
-java -jar steam-scraper-*.one-jar.jar -u -i whitelist.txt -w
+steam-scraper -u -i whitelist.txt -w
 ```
 Or, if you want to also get rid of existing categories in your sharedconfig which are not in the whitelist:
 ```
-java -jar steam-scraper-*.one-jar.jar -u -i whitelist.txt -I -w
+steam-scraper -u -i whitelist.txt -I -w
 ```
 
 
@@ -88,13 +89,14 @@ cacheExpiryDays=7
 
 
 ## Build dependencies
+* sh
 * maven 3
-* openjdk 7/8
+* openjdk 8
 
 ### Building
-```mvn clean install```
+```./build.sh```
 
-Binaries will be in the `target` directory
+Binary called ```steam-scraper``` will be in the project directory.
 
 
 ## Donation

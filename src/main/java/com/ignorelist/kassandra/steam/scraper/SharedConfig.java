@@ -95,8 +95,8 @@ public class SharedConfig {
 			return appsNode;
 		} catch (IOException|RecognitionException ex) {
 			System.err.println(ex);
+			throw new IllegalStateException(ex);
 		}
-		throw new IllegalStateException();
 	}
 
 	public synchronized Map<Long, VdfNode> getGameNodeMap() {

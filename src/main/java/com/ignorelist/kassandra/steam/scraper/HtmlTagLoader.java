@@ -13,6 +13,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -27,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -48,6 +48,7 @@ public class HtmlTagLoader implements TagLoader {
 		}
 	};
 	private static final ImmutableMap<String, String> URL_REPLACE=ImmutableMap.<String, String>builder()
+			.put("%CDN_HOST_MEDIA_SSL%", "steamcdn-a.akamaihd.net")
 			.put("%CDN_HOST_MEDIA%", "steamcdn-a.akamaihd.net")
 			.build();
 
@@ -68,63 +69,61 @@ public class HtmlTagLoader implements TagLoader {
 	}
 
 	private static String buildPageUrl(String k) {
-		return "http://store.steampowered.com/app/"+k;
+		return "https://store.steampowered.com/app/"+k;
 	}
 
-	private static String buildPageUrl(Long k) {
+	static String buildPageUrl(Long k) {
 		return buildPageUrl(k.toString());
 	}
 
 	@Override
 	public GameInfo load(Long gameId, EnumSet<TagType> types) {
-		GameInfo gameInfo=new GameInfo();
-		gameInfo.setId(gameId);
-		try {
-			if (!types.isEmpty()) {
-				InputStream inputStream=cache.get(gameId.toString());
-				try {
-					Document document=Jsoup.parse(inputStream, Charsets.UTF_8.name(), buildPageUrl(gameId));
-
-					Elements appName=document.select("div.apphub_AppName");
-					Element nameElement=Iterables.getFirst(appName, null);
-					if (null!=nameElement&&null!=nameElement.text()) {
-						gameInfo.setName(nameElement.text().trim());
-					}
-
-					Elements appIconElements=document.select("div.apphub_AppIcon img");
-					gameInfo.setIcon(getSrcUri(appIconElements));
-
-					Elements headerImageElements=document.select("img.game_header_image_full");
-					gameInfo.setHeaderImage(getSrcUri(headerImageElements));
-					final SetMultimap<TagType, String> tags=gameInfo.getTags();
-
-					if (types.contains(TagType.CATEGORY)) {
-						Elements categories=document.select("div#category_block a.name");
-						copyText(categories, tags.get(TagType.CATEGORY));
-					}
-					if (types.contains(TagType.GENRE)) {
-						Elements genres=document.select("div.details_block a[href*=/genre/]");
-						copyText(genres, tags.get(TagType.GENRE));
-					}
-					if (types.contains(TagType.USER)) {
-						Elements userTags=document.select("a.app_tag");
-						copyText(Iterables.filter(userTags, Predicates.not(DISPLAY_NONE_PREDICATE)), tags.get(TagType.USER));
-						copyText(Iterables.filter(userTags, DISPLAY_NONE_PREDICATE), tags.get(TagType.USER_HIDDEN));
-					}
-					if (types.contains(TagType.VR)) {
-						Elements vrSupport=document.select("div.game_area_details_specs a.name[href*=#vrsupport=");
-						copyText(vrSupport, tags.get(TagType.VR));
-					}
-				} finally {
-					IOUtils.closeQuietly(inputStream);
-				}
+		if (!types.isEmpty()) {
+			try (InputStream inputStream=cache.get(gameId.toString())) {
+				return parseHtml(inputStream, gameId, types);
+			} catch (ExecutionException|IOException ex) {
+				Logger.getLogger(HtmlTagLoader.class.getName()).log(Level.SEVERE, null, ex);
 			}
-		} catch (ExecutionException ex) {
-			Logger.getLogger(HtmlTagLoader.class.getName()).log(Level.SEVERE, null, ex);
-		} catch (IOException ex) {
-			Logger.getLogger(HtmlTagLoader.class.getName()).log(Level.SEVERE, null, ex);
 		}
 
+		return new GameInfo(gameId);
+	}
+
+	static GameInfo parseHtml(final InputStream inputStream, Long gameId, EnumSet<TagType> types) throws IOException {
+		GameInfo gameInfo=new GameInfo(gameId);
+
+		Document document=Jsoup.parse(inputStream, Charsets.UTF_8.name(), buildPageUrl(gameId));
+
+		Elements appName=document.select("div.apphub_AppName");
+		Element nameElement=Iterables.getFirst(appName, null);
+		if (null!=nameElement&&null!=nameElement.text()) {
+			gameInfo.setName(nameElement.text().trim());
+		}
+
+		Elements appIconElements=document.select("div.apphub_AppIcon img");
+		gameInfo.setIcon(getSrcUri(appIconElements));
+
+		Elements headerImageElements=document.select("img.game_header_image_full");
+		gameInfo.setHeaderImage(getSrcUri(headerImageElements));
+		final SetMultimap<TagType, String> tags=gameInfo.getTags();
+
+		if (types.contains(TagType.CATEGORY)) {
+			Elements categories=document.select("div#category_block a.name");
+			copyText(categories, tags.get(TagType.CATEGORY));
+		}
+		if (types.contains(TagType.GENRE)) {
+			Elements genres=document.select("div.details_block a[href*=/genre/]");
+			copyText(genres, tags.get(TagType.GENRE));
+		}
+		if (types.contains(TagType.USER)) {
+			Elements userTags=document.select("a.app_tag");
+			copyText(Iterables.filter(userTags, Predicates.not(DISPLAY_NONE_PREDICATE)), tags.get(TagType.USER));
+			copyText(Iterables.filter(userTags, DISPLAY_NONE_PREDICATE), tags.get(TagType.USER_HIDDEN));
+		}
+		if (types.contains(TagType.VR)) {
+			Elements vrSupport=document.select("div.game_area_details_specs a.name[href*=vrsupport=]");
+			copyText(vrSupport, tags.get(TagType.VR));
+		}
 		return gameInfo;
 	}
 
@@ -149,12 +148,12 @@ public class HtmlTagLoader implements TagLoader {
 	}
 
 	private static void copyText(Iterable<Element> elements, Set<String> target) {
-		for (Element element : elements) {
-			final String text=element.text();
-			if (!Strings.isNullOrEmpty(text)) {
-				target.add(text.trim());
-			}
-		}
+		Streams.stream(elements)
+				.map(Element::text)
+				.filter(Predicates.notNull())
+				.map(String::trim)
+				.filter(Predicates.not(String::isEmpty))
+				.forEachOrdered(target::add);
 	}
 
 }

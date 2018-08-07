@@ -33,6 +33,10 @@ public class GameInfo implements Iterable<String>, Serializable {
 	public GameInfo() {
 	}
 
+	public GameInfo(Long id) {
+		this.id=id;
+	}
+
 	public static Iterable<String> getAllTags(Iterable<GameInfo> gameInfos) {
 		return Iterables.concat(gameInfos);
 	}
