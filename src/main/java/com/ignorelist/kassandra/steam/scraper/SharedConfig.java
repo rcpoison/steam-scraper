@@ -27,6 +27,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import org.antlr.runtime.RecognitionException;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.jxpath.ClassFunctions;
 import org.apache.commons.jxpath.JXPathContext;
 
 /**
@@ -91,7 +92,8 @@ public class SharedConfig {
 		}
 		try {
 			JXPathContext pathContext=JXPathContext.newContext(getRootNode());
-			appsNode=(VdfNode) pathContext.getValue("//children[name='apps']");
+			pathContext.setFunctions(new ClassFunctions(XPathFunctions.class, "xxx"));
+			appsNode=(VdfNode) pathContext.getValue("//children[xxx:equalsIgnoreCase(name, 'apps')]");
 			return appsNode;
 		} catch (IOException|RecognitionException ex) {
 			System.err.println(ex);
